@@ -14,30 +14,41 @@ body {
 }
 
 /* ═══════════════════════════════════
-   SCREEN — un foglio per <Page>
+   SCREEN
 ═══════════════════════════════════ */
 .page-a4 {
   width: 210mm;
   min-height: 297mm;
-  background: white;
+  background: white url('/bg-tools.png') no-repeat right center / auto 100%;
   margin: 0 auto 28px auto;
   box-sizing: border-box;
   box-shadow: 0 4px 18px rgba(29,117,187,0.12);
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 5mm 16mm 3mm;
   border-bottom: 0.5pt solid #bbb;
-  font-size: 8pt;
-  color: #666;
+  font-size: 8.5pt;
   flex-shrink: 0;
 }
-.page-header-left  { font-style: italic; }
-.page-header-right { font-style: italic; }
+.page-header-left {
+  font-style: italic;
+  color: #555;
+}
+/* Commessa: più grande, grassetto, no corsivo */
+.page-header-right {
+  font-weight: 700;
+  font-style: normal;
+  font-size: 9pt;
+  color: #1a1a18;
+  letter-spacing: 0.02em;
+}
 
 .page-content {
   flex: 1;
@@ -47,6 +58,7 @@ body {
 .page-footer {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 3mm 16mm 5mm;
   border-top: 0.5pt solid #bbb;
   font-size: 8pt;
@@ -69,7 +81,7 @@ body {
 ═══════════════════════════════════ */
 @page {
   size: A4 portrait;
-  margin: 0;   /* controlliamo noi margini via padding dentro .page-a4 */
+  margin: 0;
 }
 
 @media print {
@@ -88,7 +100,6 @@ body {
     width: 210mm;
   }
 
-  /* Ogni .page-a4 = una pagina esatta */
   .page-a4 {
     width: 210mm !important;
     height: 297mm !important;
@@ -101,6 +112,8 @@ body {
     break-after: page !important;
     display: flex !important;
     flex-direction: column !important;
+    /* Sfondo nel print: Chrome stampa bg se "Sfondo grafica" è attivo */
+    background: white url('/bg-tools.png') no-repeat right center / auto 100% !important;
   }
 
   .page-a4:last-child {
@@ -108,7 +121,6 @@ body {
     break-after: auto !important;
   }
 
-  /* ── Mai spezzare le tabelle ── */
   table {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
@@ -124,7 +136,5 @@ body {
     break-after: avoid !important;
   }
 
-  /* Mantieni colori grigio intestazioni tabella */
-  .bg-gray-300 { background-color: #d1d5db !important; }
   th { background-color: #e5e7eb !important; }
 }
