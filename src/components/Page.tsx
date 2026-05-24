@@ -21,7 +21,9 @@ export default function Page({ children, pos, pageNumber }: Props) {
       {/* ── HEADER ── */}
       <div className="page-header">
         <span className="page-header-left">Piano Operativo di Sicurezza</span>
-        <span className="page-header-right">{commessa}</span>
+        {commessa && (
+          <span className="page-header-right">{commessa}</span>
+        )}
       </div>
 
       {/* ── CONTENT ── */}
