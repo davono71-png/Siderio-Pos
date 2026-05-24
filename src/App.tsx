@@ -15,7 +15,7 @@ import OperePanel from "./panels/OperePanel"
 import RischiPanel from "./panels/RischiPanel"
 import EmergenzePscPanel from "./panels/EmergenzePscPanel"
 
-import InfoBox from "./components/form/InfoBox"
+import InfoBox from "./components/form/Infobox"
 
 import { initialPosData } from "./data/initialPosData"
 import type { PosData } from "./types/pos"
