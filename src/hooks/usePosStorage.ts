@@ -6,60 +6,52 @@ export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
 export function usePosStorage(_commessaId: string | null) {
   const [recordId, setRecordId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
-
-  // Carica il POS esistente da Supabase
   const loadPos = useCallback(async (commId: string): Promise<PosData | null> => {
-    const { data, error } = await supabase
-      .from('pos_documenti')
-      .select('id, dati_json')
-      .eq('commessa_id', commId)
-      .maybeSingle()
+    try {
+      const { data, error } = await supabase
+        .from('pos_documenti')
+        .select('id, dati_json')
+        .eq('commessa_id', commId)
+        .maybeSingle()
 
-    if (error || !data) return null
-    setRecordId(data.id)
-    return data.dati_json as PosData
+      if (error) { console.warn('Load error:', error.message); return null }
+      if (!data) return null
+      setRecordId(data.id)
+      return data.dati_json as PosData
+    } catch (e) {
+      console.warn('Load exception:', e)
+      return null
+    }
   }, [])
 
-  // Salva (upsert) — crea se non esiste, aggiorna se esiste
   const savePos = useCallback(async (pos: PosData, commId: string): Promise<void> => {
     setSaveStatus('saving')
     try {
       if (recordId) {
-        // Aggiorna record esistente
         const { error } = await supabase
           .from('pos_documenti')
-          .update({
-            dati_json: pos,
-            modificato_il: new Date().toISOString(),
-            stato: 'bozza',
-          })
+          .update({ dati_json: pos, modificato_il: new Date().toISOString(), stato: 'bozza' })
           .eq('id', recordId)
-        if (error) throw error
+        if (error) throw new Error(error.message)
       } else {
-        // Crea nuovo record
         const { data, error } = await supabase
           .from('pos_documenti')
-          .insert({
-            commessa_id: commId,
-            dati_json: pos,
-            stato: 'bozza',
-            creato_il: new Date().toISOString(),
-            modificato_il: new Date().toISOString(),
-          })
+          .insert({ commessa_id: commId, dati_json: pos, stato: 'bozza',
+                    creato_il: new Date().toISOString(), modificato_il: new Date().toISOString() })
           .select('id')
           .single()
-        if (error) throw error
+        if (error) throw new Error(error.message)
         setRecordId(data.id)
       }
       setSaveStatus('saved')
       setTimeout(() => setSaveStatus('idle'), 2500)
-    } catch {
+    } catch (e: any) {
+      console.error('Save error:', e?.message || e)
       setSaveStatus('error')
-      setTimeout(() => setSaveStatus('idle'), 3000)
+      setTimeout(() => setSaveStatus('idle'), 4000)
     }
   }, [recordId])
 
-  return { loadPos, savePos, saveStatus, loading, setLoading }
+  return { loadPos, savePos, saveStatus, setLoading: (_v: boolean) => {} }
 }
