@@ -2,8 +2,6 @@ import Page from "../components/Page"
 import type { PosData } from "../types/pos"
 
 type Props = { pos: PosData; pageNumber?: number }
-  pos: PosData
-}
 
 export default function Capitolo2Opere({ pos, pageNumber }: Props) {
   return (
