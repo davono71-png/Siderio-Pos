@@ -4,6 +4,7 @@ import { persone } from "../data/personale"
 
 type Props = {
   pos: PosData
+  pageNumber?: number
 }
 
 function Header() {
