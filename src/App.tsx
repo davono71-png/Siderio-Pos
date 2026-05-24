@@ -18,6 +18,7 @@ import type { PosData } from "./types/pos"
 import { usePosStorage } from "./hooks/usePosStorage"
 
 const PRIMARY = "#1d75bb"
+const SUITE_URL = 'https://siderio-suite-app.vercel.app'
 const GREEN = "#22843a"
 const AMBER = "#b45309"
 
@@ -131,6 +132,21 @@ export default function App() {
       }}>
         <div style={{ width: 34, height: 34, borderRadius: "50%", background: "white", color: PRIMARY, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 16, marginRight: 12, flexShrink: 0 }}>S</div>
         <span style={{ color: "white", fontWeight: 900, fontSize: 14, letterSpacing: 2, marginRight: 24, flexShrink: 0 }}>SIDERIO POS</span>
+
+        {/* Bottone torna a Commesse */}
+        {hasCommessa && (
+          <a
+            href={SUITE_URL}
+            style={{
+              marginRight: 16, padding: "5px 14px", borderRadius: 8,
+              background: "rgba(255,255,255,0.15)", color: "white",
+              textDecoration: "none", fontSize: 13, fontWeight: 600,
+              flexShrink: 0, display: "flex", alignItems: "center", gap: 6,
+            }}
+          >
+            ← Commesse
+          </a>
+        )}
 
         <div style={{ display: "flex", gap: 4, flexWrap: "wrap", flex: 1 }}>
           {MENU.map(({ key, label }) => (
