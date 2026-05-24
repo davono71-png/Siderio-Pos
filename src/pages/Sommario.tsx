@@ -3,78 +3,125 @@ import type { PosData } from "../types/pos"
 
 type Props = { pos: PosData; pageNumber?: number }
 
+type SomItem = {
+  num: string
+  title: string
+  page: number
+  level: 0 | 1   // 0 = capitolo, 1 = paragrafo/tabella
+}
+
+const ITEMS: SomItem[] = [
+  { num: "0.",    title: "IL CANTIERE",                               page: 3,  level: 0 },
+  { num: "0.1",   title: "Dati emissione documento",                  page: 3,  level: 1 },
+  { num: "0.2",   title: "Descrizione generale delle opere",          page: 3,  level: 1 },
+  { num: "0.3",   title: "Note al Piano Operativo di sicurezza",      page: 3,  level: 1 },
+  { num: "0.4",   title: "Committente",                               page: 3,  level: 1 },
+  { num: "0.5",   title: "Appaltatrice",                              page: 4,  level: 1 },
+  { num: "0.6",   title: "Subappaltatrice / Appaltatrice",            page: 4,  level: 1 },
+  { num: "0.7",   title: "Numeri utili",                              page: 4,  level: 1 },
+  { num: "0.8",   title: "Firme",                                     page: 5,  level: 1 },
+  { num: "0.9",   title: "Durata del cantiere",                       page: 5,  level: 1 },
+  { num: "1",     title: "PERSONALE IN CANTIERE",                     page: 6,  level: 0 },
+  { num: "1.1",   title: "Addetti in cantiere",                       page: 6,  level: 1 },
+  { num: "1.2",   title: "Addetti all'emergenza in cantiere",         page: 6,  level: 1 },
+  { num: "1.3",   title: "Formazione del personale presente",         page: 7,  level: 1 },
+  { num: "1.4",   title: "DPI in dotazione per il cantiere",          page: 7,  level: 1 },
+  { num: "2.",    title: "OPERE",                                     page: 8,  level: 0 },
+  { num: "2.1",   title: "Tempi di esecuzione",                       page: 8,  level: 1 },
+  { num: "2.2",   title: "Operatività – fasi lavorative",             page: 8,  level: 1 },
+  { num: "2.3",   title: "Analisi dei rischi specifici",              page: 9,  level: 1 },
+  { num: "3",     title: "RISCHI SPECIFICI INTRODOTTI IN CANTIERE",   page: 10, level: 0 },
+  { num: "3.1",   title: "Obblighi",                                  page: 10, level: 1 },
+  { num: "3.2",   title: "Divieti",                                   page: 10, level: 1 },
+  { num: "3.3",   title: "Rischio chimico",                           page: 11, level: 1 },
+  { num: "3.4",   title: "Rischio incendio",                          page: 11, level: 1 },
+  { num: "3.5",   title: "Rischio rumore",                            page: 11, level: 1 },
+  { num: "3.6",   title: "Rischio vibrazioni mano-braccio",           page: 12, level: 1 },
+  { num: "4.7",   title: "Rischio macchine ed attrezzature",          page: 12, level: 1 },
+  { num: "4.8",   title: "Rischio movimentazione manuale dei carichi",page: 12, level: 1 },
+  { num: "4.9",   title: "Rischio elettrico",                         page: 13, level: 1 },
+  { num: "4.10",  title: "Rischio cadute dall'alto",                  page: 13, level: 1 },
+  { num: "5.",    title: "PROCEDURE IN CASO DI EMERGENZA",            page: 14, level: 0 },
+  { num: "E01",   title: "Comunicazione dell'incendio",               page: 14, level: 1 },
+  { num: "E02",   title: "Comportamento in caso di incendio",         page: 14, level: 1 },
+  { num: "E03",   title: "Evacuazione del cantiere",                  page: 14, level: 1 },
+  { num: "E04",   title: "Primo intervento antincendio",              page: 14, level: 1 },
+  { num: "E05",   title: "Infortunio sul lavoro",                     page: 15, level: 1 },
+  { num: "E06",   title: "Evacuazione a cura della squadra",          page: 15, level: 1 },
+  { num: "E07",   title: "Chiamata ai soccorsi esterni",              page: 15, level: 1 },
+  { num: "Tab.",  title: "Addetti alle emergenze",                    page: 15, level: 1 },
+  { num: "4",     title: "PROCEDURE RICHIESTE DA PSC",                page: 16, level: 0 },
+  { num: "5.1",   title: "Accesso fornitori e mezzi al cantiere",     page: 16, level: 1 },
+  { num: "5.2",   title: "Pulizia, ordine e gestione rifiuti",        page: 16, level: 1 },
+  { num: "5.3",   title: "Distanze di sicurezza e utilizzo DPI",      page: 16, level: 1 },
+  { num: "5.4",   title: "Sorveglianza sanitaria",                    page: 17, level: 1 },
+  { num: "5.5",   title: "Sospensione delle lavorazioni",             page: 17, level: 1 },
+  { num: "5.6",   title: "Ruoli e responsabilità",                    page: 17, level: 1 },
+]
+
 export default function Sommario({ pos, pageNumber }: Props) {
   return (
     <Page pos={pos} pageNumber={pageNumber}>
-      <h1 className="text-2xl font-bold text-center mb-10">SOMMARIO</h1>
+      <h1 style={{ fontSize: "14pt", fontWeight: "bold", textAlign: "center", marginBottom: "8mm" }}>
+        SOMMARIO
+      </h1>
 
-      <div className="space-y-1 text-[12px]">
-        <SomRow title="0. IL CANTIERE" page="3" />
-        <SomRow title="  Tab. 0.1 – Dati emissione documento" page="3" indent />
-        <SomRow title="  Tab. 0.2 – Descrizione generale delle opere" page="3" indent />
-        <SomRow title="  Tab. 0.3 – Note al POS" page="3" indent />
-        <SomRow title="  Tab. 0.4 – Committente" page="4" indent />
-        <SomRow title="  Tab. 0.5 – Appaltatrice" page="4" indent />
-        <SomRow title="  Tab. 0.6 – Nostra ditta (subappaltatrice)" page="5" indent />
-        <SomRow title="  Tab. 0.7 – Numeri utili" page="5" indent />
-        <SomRow title="  Tab. 0.8 – Firme" page="5" indent />
-        <SomRow title="  Tab. 0.9 – Durata del cantiere" page="6" indent />
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "10pt" }}>
+        <tbody>
+          {ITEMS.map((item) => (
+            <tr key={`${item.num}-${item.title}`}>
+              {/* Numero */}
+              <td style={{
+                paddingLeft: item.level === 1 ? "8mm" : "0",
+                paddingRight: "3mm",
+                paddingTop: item.level === 0 ? "4px" : "1px",
+                paddingBottom: item.level === 0 ? "4px" : "1px",
+                fontWeight: item.level === 0 ? "bold" : "normal",
+                width: "12mm",
+                verticalAlign: "bottom",
+                whiteSpace: "nowrap",
+                color: item.level === 0 ? "#000" : "#333",
+              }}>
+                {item.num}
+              </td>
 
-        <div className="mt-3" />
-        <SomRow title="1. PERSONALE IN CANTIERE" page="8" />
-        <SomRow title="  Tab. 1.1 – Personale e ruoli" page="8" indent />
-        <SomRow title="  Tab. 1.2 – Formazione del personale" page="9" indent />
-        <SomRow title="  Tab. 1.3 – DPI in dotazione" page="10" indent />
+              {/* Titolo */}
+              <td style={{
+                paddingTop: item.level === 0 ? "4px" : "1px",
+                paddingBottom: item.level === 0 ? "4px" : "1px",
+                fontWeight: item.level === 0 ? "bold" : "normal",
+                color: item.level === 0 ? "#000" : "#333",
+                verticalAlign: "bottom",
+              }}>
+                {item.title}
+              </td>
 
-        <div className="mt-3" />
-        <SomRow title="2. LE OPERE" page="12" />
-        <SomRow title="  Tab. 2.1 – Tempi di esecuzione" page="12" indent />
-        <SomRow title="  Tab. 2.2 – Fasi operative" page="13" indent />
-        <SomRow title="  Tab. 2.3 – Analisi rischi specifici" page="14" indent />
+              {/* Puntini */}
+              <td style={{ width: "100%", verticalAlign: "bottom", paddingBottom: "3px" }}>
+                <div style={{
+                  borderBottom: "1px dotted #888",
+                  marginBottom: "2px",
+                  marginLeft: "4px",
+                  marginRight: "4px",
+                }} />
+              </td>
 
-        <div className="mt-3" />
-        <SomRow title="3. RISCHI SPECIFICI INTRODOTTI IN CANTIERE" page="18" />
-        <SomRow title="  § 3.1 – Obblighi" page="18" indent />
-        <SomRow title="  § 3.2 – Divieti" page="18" indent />
-        <SomRow title="  § 3.3 – Rischio chimico" page="19" indent />
-        <SomRow title="  § 3.4 – Rischio incendio" page="20" indent />
-        <SomRow title="  § 3.5 – Rischio rumore" page="20" indent />
-        <SomRow title="  § 3.6 – Rischio vibrazioni" page="21" indent />
-        <SomRow title="  § 4.7 – Rischio macchine e attrezzature" page="21" indent />
-        <SomRow title="  § 4.8 – Movimentazione manuale carichi (MMC)" page="22" indent />
-        <SomRow title="  § 4.9 – Rischio elettrico" page="22" indent />
-        <SomRow title="  § 4.10 – Rischio cadute dall'alto" page="23" indent />
-
-        <div className="mt-3" />
-        <SomRow title="4. GESTIONE DELLE EMERGENZE" page="24" />
-        <SomRow title="  E01 – Comunicazione dell'incendio" page="24" indent />
-        <SomRow title="  E02 – Comportamento in caso di incendio" page="24" indent />
-        <SomRow title="  E03 – Evacuazione del cantiere" page="24" indent />
-        <SomRow title="  E04 – Primo intervento antincendio" page="25" indent />
-        <SomRow title="  E05 – Infortunio sul lavoro" page="25" indent />
-        <SomRow title="  E06 – Evacuazione a cura della squadra" page="25" indent />
-        <SomRow title="  E07 – Chiamata ai soccorsi esterni" page="25" indent />
-        <SomRow title="  Tab. 4.1 – Addetti alle emergenze" page="26" indent />
-
-        <div className="mt-3" />
-        <SomRow title="5. COORDINAMENTO CON IL PSC" page="27" />
-        <SomRow title="  Tab. 5.1 – Accesso fornitori e mezzi" page="27" indent />
-        <SomRow title="  Tab. 5.2 – Pulizia, ordine e gestione rifiuti" page="27" indent />
-        <SomRow title="  Tab. 5.3 – Distanze di sicurezza e DPI" page="28" indent />
-        <SomRow title="  Tab. 5.4 – Sorveglianza sanitaria" page="28" indent />
-        <SomRow title="  § 5.5 – Sospensione delle lavorazioni" page="29" indent />
-        <SomRow title="  Tab. 5.6 – Ruoli e responsabilità" page="29" indent />
-      </div>
+              {/* Pagina */}
+              <td style={{
+                paddingTop: item.level === 0 ? "4px" : "1px",
+                paddingBottom: item.level === 0 ? "4px" : "1px",
+                fontWeight: item.level === 0 ? "bold" : "normal",
+                color: item.level === 0 ? "#000" : "#333",
+                textAlign: "right",
+                whiteSpace: "nowrap",
+                verticalAlign: "bottom",
+              }}>
+                {item.page}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </Page>
-  )
-}
-
-function SomRow({ title, page, indent }: { title: string; page: string; indent?: boolean }) {
-  return (
-    <div className={`flex items-end gap-1 ${indent ? "pl-4 text-[11px] text-gray-600" : "font-semibold"}`}>
-      <span className="whitespace-nowrap">{title}</span>
-      <div className="flex-1 border-b border-dotted border-gray-400 mb-[3px] min-w-[10px]" />
-      <span className="whitespace-nowrap">{page}</span>
-    </div>
   )
 }
