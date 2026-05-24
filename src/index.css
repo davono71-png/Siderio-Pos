@@ -2,8 +2,6 @@
 
 :root {
   --primary: #1d75bb;
-  --primary-dark: #155f99;
-  --primary-light: #e8f2fb;
   --bg: #f5f7fb;
   --text: #1a1a18;
 }
@@ -15,49 +13,46 @@ body {
   color: var(--text);
 }
 
-/* ═══════════════════════════════════════════
-   SCREEN: foglio A4 visibile nell'editor
-═══════════════════════════════════════════ */
+/* ═══════════════════════════════════
+   SCREEN — un foglio per <Page>
+═══════════════════════════════════ */
 .page-a4 {
   width: 210mm;
   min-height: 297mm;
   background: white;
-  margin: 0 auto 32px auto;
-  padding: 0;
+  margin: 0 auto 28px auto;
   box-sizing: border-box;
-  box-shadow: 0 6px 20px rgba(29,117,187,0.13);
+  box-shadow: 0 4px 18px rgba(29,117,187,0.12);
   display: flex;
   flex-direction: column;
-  position: relative;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 5mm 16mm 3mm 16mm;
-  border-bottom: 0.4pt solid #aaa;
+  padding: 5mm 16mm 3mm;
+  border-bottom: 0.5pt solid #bbb;
   font-size: 8pt;
   color: #666;
   flex-shrink: 0;
 }
 .page-header-left  { font-style: italic; }
-.page-header-right { font-style: italic; text-align: right; }
+.page-header-right { font-style: italic; }
 
 .page-content {
   flex: 1;
-  padding: 7mm 16mm 5mm 16mm;
+  padding: 8mm 16mm 4mm;
 }
 
 .page-footer {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-top: auto;
-  padding: 3mm 16mm 5mm 16mm;
-  border-top: 0.4pt solid #aaa;
+  padding: 3mm 16mm 5mm;
+  border-top: 0.5pt solid #bbb;
   font-size: 8pt;
   color: #666;
+  margin-top: auto;
+  flex-shrink: 0;
 }
 .page-footer-left   { flex: 1; }
 .page-footer-center { flex: 1; text-align: center; }
@@ -69,16 +64,12 @@ body {
   align-items: center;
 }
 
-/* ═══════════════════════════════════════════
+/* ═══════════════════════════════════
    PRINT
-   Strategia: ogni .page-a4 è una pagina.
-   Header e footer sono dentro il flusso,
-   con padding @page = 0 così li controlliamo noi.
-   break-inside:avoid sulle tabelle.
-═══════════════════════════════════════════ */
+═══════════════════════════════════ */
 @page {
   size: A4 portrait;
-  margin: 0;
+  margin: 0;   /* controlliamo noi margini via padding dentro .page-a4 */
 }
 
 @media print {
@@ -97,70 +88,43 @@ body {
     width: 210mm;
   }
 
-  /* Ogni foglio è esattamente una pagina A4 */
+  /* Ogni .page-a4 = una pagina esatta */
   .page-a4 {
     width: 210mm !important;
-    height: 297mm !important;    /* fisso: forza esattamente una pagina */
+    height: 297mm !important;
     min-height: unset !important;
+    max-height: 297mm !important;
     margin: 0 !important;
-    padding: 0 !important;
     box-shadow: none !important;
-    overflow: hidden !important;  /* taglia se eccede — il contenuto non deve mai traboccare */
+    overflow: hidden !important;
+    page-break-after: always !important;
+    break-after: page !important;
     display: flex !important;
     flex-direction: column !important;
-    page-break-after: always;
-    break-after: page;
   }
 
   .page-a4:last-child {
-    page-break-after: auto;
-    break-after: auto;
+    page-break-after: auto !important;
+    break-after: auto !important;
   }
 
-  /* Header e footer identici allo screen */
-  .page-header {
-    padding: 5mm 16mm 3mm 16mm;
-    border-bottom: 0.4pt solid #aaa;
-    font-size: 8pt;
-    color: #555;
-    flex-shrink: 0;
-  }
-
-  .page-footer {
-    padding: 3mm 16mm 5mm 16mm;
-    border-top: 0.4pt solid #aaa;
-    font-size: 8pt;
-    color: #555;
-    margin-top: auto !important;
-    flex-shrink: 0;
-  }
-
-  .page-content {
-    flex: 1;
-    padding: 7mm 16mm 5mm 16mm;
-    overflow: hidden;
-  }
-
-  /* ── Tabelle: mai spezzare ── */
+  /* ── Mai spezzare le tabelle ── */
   table {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-    width: 100%;
   }
-  thead {
-    display: table-header-group;
-  }
+  thead { display: table-header-group; }
   tr {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
-  /* Titoli: mantieni col contenuto sotto */
   h1, h2, h3 {
     page-break-after: avoid !important;
     break-after: avoid !important;
   }
 
-  /* Sfondo grigio intestazioni tabella */
+  /* Mantieni colori grigio intestazioni tabella */
   .bg-gray-300 { background-color: #d1d5db !important; }
+  th { background-color: #e5e7eb !important; }
 }
