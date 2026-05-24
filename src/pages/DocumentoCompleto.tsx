@@ -3,8 +3,10 @@ import Sommario from "./Sommario"
 import Capitolo0Cantiere from "./Capitolo0Cantiere"
 import Capitolo1Personale from "./Capitolo1Personale"
 import Capitolo2Opere from "./Capitolo2Opere"
-import type { PosData } from "../types/pos"
 import Capitolo3Rischi from "./Capitolo3Rischi"
+import Capitolo4Emergenze from "./Capitolo4Emergenze"
+import Capitolo5Psc from "./Capitolo5Psc"
+import type { PosData } from "../types/pos"
 
 type Props = {
   pos: PosData
@@ -19,6 +21,8 @@ export default function DocumentoCompleto({ pos }: Props) {
       <Capitolo1Personale pos={pos} />
       <Capitolo2Opere pos={pos} />
       <Capitolo3Rischi pos={pos} />
+      <Capitolo4Emergenze pos={pos} />
+      <Capitolo5Psc pos={pos} />
     </div>
   )
 }
