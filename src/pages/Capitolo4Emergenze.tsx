@@ -64,9 +64,9 @@ const procedure = [
   },
 ]
 
-export default function Capitolo4Emergenze({ pos }: Props) {
+export default function Capitolo4Emergenze({ pos, pageNumber }: Props) {
   return (
-    <Page>
+    <Page pos={pos} pageNumber={pageNumber}>
       <Header />
 
       <h1 className="text-xl font-bold mb-5">4. GESTIONE DELLE EMERGENZE</h1>
