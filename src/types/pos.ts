@@ -16,6 +16,92 @@ export type DpiItem = {
   presente: boolean
 }
 
+export type SostanzaChimica = {
+  id: string
+  presente: boolean
+  nome: string
+  utilizzo: string
+  schedaSicurezzaAllegata: boolean
+}
+
+export type RischioChimico = {
+  presente: boolean
+  possibiliInterferenze: boolean
+  sostanzeChimiche: boolean
+  polveri: boolean
+  fumi: boolean
+  sostanze: SostanzaChimica[]
+  probabilita: number
+  danno: number
+}
+
+export type RischioIncendio = {
+  presente: boolean
+  materialeCombustibile: boolean
+  sostanzeInfiammabili: boolean
+  impiantiElettricoTermico: boolean
+  probabilita: number
+  danno: number
+}
+
+export type RischioRumore = {
+  presente: boolean
+  attrezzatureRumorose: boolean
+  lavorazioniMeccaniche: boolean
+  livello: "INFERIORE_80" | "TRA_80_85" | "SUPERIORE_85"
+}
+
+export type RischioVibrazioni = {
+  presente: boolean
+  usoAttrezzatureManuali: boolean
+  guidaMezziCantiere: boolean
+  livello: "INFERIORE_2_5" | "TRA_2_5_5" | "SUPERIORE_5"
+}
+
+export type Attrezzatura = {
+  id: string
+  tipologia: string
+  fase: string
+  libroMacchina: boolean
+}
+
+export type RischioMacchine = {
+  presente: boolean
+  organiInMovimento: boolean
+  proiezioneMaterie: boolean
+  superficiTaglienti: boolean
+  attrezzature: Attrezzatura[]
+  probabilita: number
+  danno: number
+}
+
+export type RischioMMC = {
+  presente: boolean
+  movimentazioneManuale: boolean
+  postureIncongrue: boolean
+  movimentiRepetitivi: boolean
+  probabilita: number
+  danno: number
+}
+
+export type RischioElettrico = {
+  presente: boolean
+  contattoDiretto: boolean
+  contattoIndiretto: boolean
+  usoAttrezzatureElettriche: boolean
+  probabilita: number
+  danno: number
+}
+
+export type RischioAltura = {
+  presente: boolean
+  lavoroInQuota: boolean
+  usoPle: boolean
+  usoImpalcature: boolean
+  probabilita: number
+  danno: number
+}
+
 export type PosData = {
   revisione: string
   dataRevisione: string
@@ -88,15 +174,28 @@ export type PosData = {
 
   formazionePersonale: Record<string, FormazioneFlags>
   dpiCantiere: DpiItem[]
+
   tempiEsecuzione: {
-  attivita: string
-  percentuale: number
-}[]
+    attivita: string
+    percentuale: number
+  }[]
 
-fasiOperative: {
-  titolo: string
-  descrizione: string
-}[]
+  fasiOperative: {
+    titolo: string
+    descrizione: string
+  }[]
 
-analisiRischiSpecificiOpere: string
+  analisiRischiSpecificiOpere: string
+
+  rischioChimico: RischioChimico
+  rischioIncendio: RischioIncendio
+  rischioRumore: RischioRumore
+  rischioVibrazioni: RischioVibrazioni
+  rischioMacchine: RischioMacchine
+  rischioMMC: RischioMMC
+  rischioElettrico: RischioElettrico
+  rischioAltura: RischioAltura
+
+  pscRichiesto: boolean
 }
+
