@@ -1,13 +1,13 @@
 import Page from "../components/Page"
 import type { PosData } from "../types/pos"
 
-type Props = {
+type Props = { pos: PosData; pageNumber?: number }
   pos: PosData
 }
 
-export default function Capitolo2Opere({ pos }: Props) {
+export default function Capitolo2Opere({ pos, pageNumber }: Props) {
   return (
-    <Page>
+    <Page pos={pos} pageNumber={pageNumber}>
       <Header />
 
       <h1 className="text-xl font-bold mb-5">2. OPERE</h1>
