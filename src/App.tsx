@@ -53,10 +53,12 @@ export default function App() {
   // All'avvio: carica da Supabase se c'è commessa_id, altrimenti pre-compila con URL params
   useEffect(() => {
     async function init() {
+      try {
       const { commessaId, numero, cliente } = urlParams.current
 
       if (commessaId) {
-        const saved = await loadPos(commessaId)
+        let saved = null
+        try { saved = await loadPos(commessaId) } catch(e) { console.warn('Supabase load failed:', e) }
         if (saved) {
           setPos(saved)
         } else {
@@ -82,6 +84,7 @@ export default function App() {
         })
       }
 
+      } catch(e) { console.error('Init error:', e) }
       setLoading(false)
       setAppReady(true)
     }
