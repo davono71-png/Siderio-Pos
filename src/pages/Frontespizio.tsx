@@ -5,9 +5,9 @@ type Props = {
   pos: PosData
 }
 
-export default function Frontespizio({ pos }: Props) {
+export default function Frontespizio({ pos, pageNumber }: Props) {
   return (
-    <Page>
+    <Page pos={pos} pageNumber={pageNumber}>
       <div className="pt-10">
         <h1 className="text-center text-4xl font-bold mb-3">
           PIANO OPERATIVO DI SICUREZZA
