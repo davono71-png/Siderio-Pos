@@ -3,6 +3,7 @@ import type { PosData } from "../types/pos"
 
 type Props = {
   pos: PosData
+  pageNumber?: number
 }
 
 function Header() {
