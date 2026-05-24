@@ -11,7 +11,9 @@ export type FormazioneFlags = {
 
 export type Persona = {
   id: string
-  nome: string
+  nome: string          // "COGNOME NOME" — formato maiuscolo per tabelle
+  cognome: string       // solo cognome maiuscolo
+  nomeCompleto: string  // "Nome Cognome" — formato leggibile per testo
   funzione: string
   ruoliPossibili: string[]
   qualificaMansione: string
@@ -33,6 +35,8 @@ export const persone: Persona[] = [
   {
     id: "davide-onofri",
     nome: "ONOFRI DAVIDE",
+    cognome: "ONOFRI",
+    nomeCompleto: "Davide Onofri",
     funzione: "DATORE DI LAVORO",
     ruoliPossibili: ["DATORE DI LAVORO"],
     qualificaMansione: "DATORE DI LAVORO",
@@ -45,6 +49,8 @@ export const persone: Persona[] = [
   {
     id: "tommaso-onofri",
     nome: "ONOFRI TOMMASO",
+    cognome: "ONOFRI",
+    nomeCompleto: "Tommaso Onofri",
     funzione: "DIPENDENTE",
     ruoliPossibili: ["LAVORATORE", "PREPOSTO"],
     qualificaMansione: "ADDETTO CARPENTIERE",
@@ -59,6 +65,8 @@ export const persone: Persona[] = [
   {
     id: "fabio-andreatta",
     nome: "ANDREATTA FABIO",
+    cognome: "ANDREATTA",
+    nomeCompleto: "Fabio Andreatta",
     funzione: "DIPENDENTE",
     ruoliPossibili: ["LAVORATORE", "PREPOSTO"],
     qualificaMansione: "ADDETTO CARPENTIERE",
@@ -76,6 +84,8 @@ export const persone: Persona[] = [
   {
     id: "fabrizio-delbarba",
     nome: "DELBARBA FABRIZIO",
+    cognome: "DELBARBA",
+    nomeCompleto: "Fabrizio Delbarba",
     funzione: "DIPENDENTE",
     ruoliPossibili: ["LAVORATORE"],
     qualificaMansione: "ADDETTO CARPENTIERE",
@@ -90,6 +100,8 @@ export const persone: Persona[] = [
   {
     id: "alessio-elia",
     nome: "ELIA ALESSIO",
+    cognome: "ELIA",
+    nomeCompleto: "Alessio Elia",
     funzione: "DIPENDENTE",
     ruoliPossibili: ["LAVORATORE"],
     qualificaMansione: "ADDETTO CARPENTIERE",
@@ -103,6 +115,8 @@ export const persone: Persona[] = [
   {
     id: "gianfranco-delbarba",
     nome: "DELBARBA GIANFRANCO",
+    cognome: "DELBARBA",
+    nomeCompleto: "Gianfranco Delbarba",
     funzione: "LEGALE RAPPRESENTANTE",
     ruoliPossibili: ["LAVORATORE"],
     qualificaMansione: "ADDETTO CARPENTIERE",
@@ -116,6 +130,8 @@ export const persone: Persona[] = [
   {
     id: "mattia-delbarba",
     nome: "DELBARBA MATTIA",
+    cognome: "DELBARBA",
+    nomeCompleto: "Mattia Delbarba",
     funzione: "LEGALE RAPPRESENTANTE",
     ruoliPossibili: ["LAVORATORE"],
     qualificaMansione: "ADDETTO CARPENTIERE",
