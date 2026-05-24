@@ -78,7 +78,7 @@ function RischioBox({ livello }: { livello: string }) {
   )
 }
 
-export default function Capitolo3Rischi({ pos }: Props) {
+export default function Capitolo3Rischi({ pos, pageNumber }: Props) {
   const rc = pos.rischioChimico
   const ri = pos.rischioIncendio
   const rr = pos.rischioRumore
@@ -101,7 +101,7 @@ export default function Capitolo3Rischi({ pos }: Props) {
   }[rv.livello]
 
   return (
-    <Page>
+    <Page pos={pos} pageNumber={pageNumber}>
       <Header />
 
       <h1 className="text-xl font-bold mb-5">
