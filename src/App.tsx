@@ -92,14 +92,7 @@ export default function App() {
     init()
   }, [])
 
-  // Salvataggio automatico ogni 60 secondi se c'è commessa_id
-  useEffect(() => {
-    if (!appReady || !urlParams.current.commessaId) return
-    const interval = setInterval(() => {
-      savePos(pos, urlParams.current.commessaId!)
-    }, 60000)
-    return () => clearInterval(interval)
-  }, [appReady, pos])
+  // Autosave disabilitato in modalità demo
 
   function handleSave() {
     if (urlParams.current.commessaId) {
@@ -119,7 +112,7 @@ export default function App() {
     )
   }
 
-  const hasCommessa = !!urlParams.current.commessaId
+  const hasCommessa = false // Demo: nessun collegamento a Suite
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
@@ -131,7 +124,12 @@ export default function App() {
         boxShadow: "0 2px 8px rgba(29,117,187,0.18)", minHeight: 52,
       }}>
         <div style={{ width: 34, height: 34, borderRadius: "50%", background: "white", color: PRIMARY, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 16, marginRight: 12, flexShrink: 0 }}>S</div>
-        <span style={{ color: "white", fontWeight: 900, fontSize: 14, letterSpacing: 2, marginRight: 24, flexShrink: 0 }}>SIDERIO POS</span>
+        <span style={{ color: "white", fontWeight: 900, fontSize: 14, letterSpacing: 2, marginRight: 12, flexShrink: 0 }}>SIDERIO POS</span>
+        <span style={{
+          background: "rgba(255,255,255,0.15)", color: "white", fontSize: 10,
+          fontWeight: 700, padding: "3px 10px", borderRadius: 20, marginRight: 20,
+          letterSpacing: 1, flexShrink: 0, border: "1px solid rgba(255,255,255,0.3)"
+        }}>DEMO</span>
 
         {/* Bottone torna a Commesse */}
         {hasCommessa && (
@@ -201,10 +199,14 @@ export default function App() {
               </p>
               <button type="button" onClick={() => window.print()} style={{
                 background: AMBER, color: "white", border: "none", borderRadius: 10,
-                padding: "10px 20px", fontWeight: 700, fontSize: 14, cursor: "pointer", width: "100%",
+                padding: "12px 20px", fontWeight: 700, fontSize: 14, cursor: "pointer", width: "100%",
+                boxShadow: "0 2px 8px rgba(180,83,9,0.25)"
               }}>
                 🖨 Stampa / Salva PDF
               </button>
+              <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 8, textAlign: "center" }}>
+                Versione demo — i dati non vengono salvati
+              </p>
             </div>
             <DocumentoCompleto pos={pos} />
           </div>
