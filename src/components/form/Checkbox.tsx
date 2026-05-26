@@ -6,13 +6,13 @@ type Props = {
 
 export default function Checkbox({ label, checked, onChange }: Props) {
   return (
-    <label className="flex items-center gap-2 mb-3">
+    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, cursor: 'pointer', fontSize: 12, color: '#1E1B2E' }}>
       <input
         type="checkbox"
         checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
+        onChange={e => onChange(e.target.checked)}
+        style={{ width: 15, height: 15, accentColor: '#7C3AED', cursor: 'pointer' }}
       />
-
       <span>{label}</span>
     </label>
   )
