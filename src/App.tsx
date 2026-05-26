@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import DocumentoCompleto from "./pages/DocumentoCompleto"
 import Frontespizio from "./pages/Frontespizio"
 import Capitolo0Cantiere from "./pages/Capitolo0Cantiere"
@@ -42,6 +42,113 @@ function getUrlParams() {
     numero: p.get('numero') || '',
     cliente: p.get('cliente') || '',
   }
+}
+
+
+// ─── MINIATURE PAGINE ────────────────────────────────────────────────────────
+const PAGINE = [
+  { n: 1,  label: "Frontespizio" },
+  { n: 2,  label: "Sommario" },
+  { n: 3,  label: "0.1 Dati doc." },
+  { n: 4,  label: "0.5 Appaltatrice" },
+  { n: 5,  label: "0.7 Cantiere" },
+  { n: 6,  label: "1. Personale" },
+  { n: 7,  label: "1.4 DPI" },
+  { n: 8,  label: "2. Opere" },
+  { n: 9,  label: "3. Rischi 1" },
+  { n: 10, label: "3. Rischi 2" },
+  { n: 11, label: "3. Rischi 3" },
+  { n: 12, label: "4. Emergenze" },
+  { n: 13, label: "5. PSC 1" },
+  { n: 14, label: "5. PSC 2" },
+]
+
+function ThumbnailStrip() {
+  const [activePage, setActivePage] = React.useState(1)
+  const stripRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    // IntersectionObserver: rileva quale pagina è visibile
+    const pages = document.querySelectorAll('.page-a4')
+    if (!pages.length) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const idx = Array.from(pages).indexOf(entry.target as HTMLElement)
+            if (idx !== -1) {
+              const pageNum = idx + 1
+              setActivePage(pageNum)
+              // Scrolla la strip per tenere la miniatura attiva in vista
+              if (stripRef.current) {
+                const thumb = stripRef.current.querySelector(`[data-page="${pageNum}"]`) as HTMLElement
+                if (thumb) thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+              }
+            }
+          }
+        })
+      },
+      { threshold: 0.4 }
+    )
+
+    pages.forEach(p => observer.observe(p))
+    return () => observer.disconnect()
+  }, [])
+
+  function scrollToPage(n: number) {
+    const pages = document.querySelectorAll('.page-a4')
+    const page = pages[n - 1]
+    if (page) page.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    setActivePage(n)
+  }
+
+  return (
+    <div
+      ref={stripRef}
+      className="no-print"
+      style={{
+        width: 110, flexShrink: 0, background: 'white',
+        borderLeft: '1px solid #EDE9FE',
+        overflowY: 'auto', overflowX: 'hidden',
+        position: 'sticky', top: 68,
+        height: 'calc(100vh - 68px)',
+        padding: '12px 8px',
+        display: 'flex', flexDirection: 'column', gap: 10,
+      }}
+    >
+      {PAGINE.map(p => (
+        <div
+          key={p.n}
+          data-page={p.n}
+          onClick={() => scrollToPage(p.n)}
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer' }}
+        >
+          <div style={{
+            width: 88, height: 124, borderRadius: 4, overflow: 'hidden',
+            border: activePage === p.n ? '2px solid #7C3AED' : '1.5px solid #E5E7EB',
+            boxShadow: activePage === p.n ? '0 0 0 2px rgba(124,58,237,0.2)' : 'none',
+            background: '#FAFAFA',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'border-color 0.15s',
+          }}>
+            <div style={{
+              fontSize: 7, color: activePage === p.n ? '#5B21B6' : '#9CA3AF',
+              textAlign: 'center', padding: '6px 4px', lineHeight: 1.4,
+              fontWeight: activePage === p.n ? 700 : 400,
+            }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: activePage === p.n ? '#7C3AED' : '#D1D5DB', marginBottom: 4 }}>{p.n}</div>
+              {p.label}
+            </div>
+          </div>
+          <span style={{
+            fontSize: 10, fontWeight: activePage === p.n ? 700 : 400,
+            color: activePage === p.n ? '#7C3AED' : '#9CA3AF',
+          }}>{p.n}</span>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 export default function App() {
@@ -189,37 +296,36 @@ export default function App() {
       {/* ── BODY ── */}
       <div style={{ padding: 24 }}>
         {section === "preview" ? (
-          <div>
-            <div className="no-print" style={{
-              background: "white", borderRadius: 12, padding: 20,
-              boxShadow: "0 2px 12px rgba(91,33,182,0.08)", maxWidth: 360, marginBottom: 24,
-              borderLeft: "4px solid #7C3AED",
-            }}>
-              {hasCommessa && (
-                <div style={{ marginBottom: 12 }}>
-                  <button onClick={handleSave} style={{
-                    width: "100%", padding: "10px 0", background: PRIMARY, color: "white",
-                    border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer", marginBottom: 8,
-                  }}>
-                    {saveStatus === 'saving' ? 'Salvo...' : saveStatus === 'saved' ? '✓ Salvato!' : '💾 Salva POS'}
-                  </button>
-                </div>
-              )}
-              <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>
-                Anteprima completa. Usa il pulsante per stampare o salvare in PDF.
-              </p>
-              <button type="button" onClick={() => window.print()} style={{
-                background: AMBER, color: "white", border: "none", borderRadius: 10,
-                padding: "12px 20px", fontWeight: 700, fontSize: 14, cursor: "pointer", width: "100%",
-                boxShadow: "0 2px 8px rgba(180,83,9,0.25)"
+          <div style={{ display: "flex", gap: 0 }}>
+            {/* Documento + toolbar */}
+            <div style={{ flex: 1 }}>
+              <div className="no-print" style={{
+                background: "white", borderRadius: 12, padding: 16,
+                boxShadow: "0 2px 12px rgba(91,33,182,0.08)", maxWidth: 360, marginBottom: 20,
+                borderLeft: "4px solid #7C3AED",
               }}>
-                🖨 Stampa / Salva PDF
-              </button>
-              <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 8, textAlign: "center" }}>
-                Versione demo — i dati non vengono salvati
-              </p>
+                <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>
+                  Anteprima completa del documento.
+                </p>
+                <button type="button" onClick={() => window.print()} style={{
+                  background: "#7C3AED", color: "white", border: "none", borderRadius: 10,
+                  padding: "10px 20px", fontWeight: 700, fontSize: 14, cursor: "pointer", width: "100%",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                  Stampa / Salva PDF
+                </button>
+                <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 8, textAlign: "center" }}>
+                  Versione demo — i dati non vengono salvati
+                </p>
+              </div>
+              <div id="doc-scroll-area">
+                <DocumentoCompleto pos={pos} />
+              </div>
             </div>
-            <DocumentoCompleto pos={pos} />
+
+            {/* Colonna miniature — scrolls con il documento */}
+            <ThumbnailStrip />
           </div>
         ) : (
           <div style={{ maxWidth: 1400, margin: "0 auto", display: "grid", gridTemplateColumns: "400px 1fr", gap: 24 }}>
