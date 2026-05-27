@@ -154,6 +154,15 @@ function ThumbnailStrip() {
 
 export default function App() {
   const [section, setSection] = useState<Section>("frontespizio")
+  const leftPanelRef = React.useRef<HTMLDivElement>(null)
+
+  function changeSection(s: Section) {
+    setSection(s)
+    // Reset scroll pannello sinistro in cima
+    if (leftPanelRef.current) {
+      leftPanelRef.current.scrollTop = 0
+    }
+  }
   const [pos, setPos] = useState<PosData>(initialPosData)
   const [appReady, setAppReady] = useState(true) // Demo: sempre pronto
   const urlParams = useRef(getUrlParams())
@@ -262,7 +271,7 @@ export default function App() {
 
         <div style={{ display: "flex", gap: 4, flexWrap: "wrap", flex: 1 }}>
           {MENU.map(({ key, label }) => (
-            <button key={key} onClick={() => setSection(key)} style={{
+            <button key={key} onClick={() => changeSection(key as Section)} style={{
               padding: "14px 14px", border: "none", cursor: "pointer",
               fontSize: 13, fontWeight: section === key ? 700 : 500,
               background: "transparent",
@@ -326,12 +335,10 @@ export default function App() {
               </div>
             </div>
 
-            {/* Colonna miniature — scrolls con il documento */}
-            <ThumbnailStrip />
-          </div>
+            </div>
         ) : (
-          <div style={{ maxWidth: 1400, margin: "0 auto", display: "grid", gridTemplateColumns: "400px 1fr", gap: 24 }}>
-            <div className="no-print" style={{
+          <div style={{ maxWidth: 1400, margin: "0 auto", display: "grid", gridTemplateColumns: "400px 1fr 110px", gap: 0 }}>
+            <div ref={leftPanelRef} className="no-print" style={{
               background: "white", borderRadius: 12,
               boxShadow: "0 2px 12px rgba(91,33,182,0.08)",
               position: "sticky", top: 68, maxHeight: "calc(100vh - 88px)", overflowY: "auto",
@@ -369,6 +376,8 @@ export default function App() {
               {section === "emergenze"    && <><Capitolo4Emergenze pos={pos} /><Capitolo5Psc pos={pos} /></>}
             </div>
           </div>
+          {/* Colonna miniature — sempre visibile */}
+          <ThumbnailStrip />
         )}
       </div>
     </div>
