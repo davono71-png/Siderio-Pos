@@ -196,6 +196,7 @@ export default function App() {
       } catch(e) { console.error('Init error:', e) }
       setLoading(false)
       setAppReady(true)
+      setAppReady(true)
     }
     init()
   }, [])
