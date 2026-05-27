@@ -16,7 +16,7 @@ import EmergenzePscPanel from "./panels/EmergenzePscPanel"
 import InfoBox from "./components/form/Infobox"
 import { initialPosData } from "./data/initialPosData"
 import type { PosData } from "./types/pos"
-import DichiarazioniPanel from './pages/Dichiarazioni'
+import DichiarazioniPanel, { DichiarazioniPreview } from './pages/Dichiarazioni'
 import { usePosStorage } from "./hooks/usePosStorage"
 
 const PRIMARY = "#7C3AED" // eslint-disable-line
@@ -396,6 +396,7 @@ export default function App() {
               {section === "opere"        && <Capitolo2Opere pos={pos} />}
               {section === "rischi"       && <Capitolo3Rischi pos={pos} />}
               {section === "emergenze"    && <><Capitolo4Emergenze pos={pos} /><Capitolo5Psc pos={pos} /></>}
+              {section === "dichiarazioni" && <DichiarazioniPreview pos={pos} />}
             </div>
             {/* Colonna miniature — sempre visibile */}
             <ThumbnailStrip onSectionChange={changeSection} />
