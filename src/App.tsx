@@ -20,7 +20,7 @@ import DichiarazioniPanel from './pages/Dichiarazioni'
 import { usePosStorage } from "./hooks/usePosStorage"
 
 const PRIMARY = "#7C3AED" // eslint-disable-line
-// const SUITE_URL = 'https://siderio-suite-app.vercel.app'
+const SUITE_URL = 'https://siderio-suite-app.vercel.app'
 // const GREEN = "#22843a"
 // const AMBER = "#b45309"
 
@@ -168,7 +168,7 @@ export default function App() {
   const [pos, setPos] = useState<PosData>(initialPosData)
   const [appReady, setAppReady] = useState(true) // Demo: sempre pronto
   const urlParams = useRef(getUrlParams())
-  const { loadPos } = usePosStorage(urlParams.current.commessaId)
+  const { loadPos, savePos, saveStatus } = usePosStorage(urlParams.current.commessaId)
 
   // All'avvio: carica da Supabase se c'è commessa_id, altrimenti pre-compila con URL params
   useEffect(() => {
@@ -280,6 +280,17 @@ export default function App() {
           ))}
         </div>
 
+        {urlParams.current.commessaId && (
+          <button onClick={() => { window.location.href = SUITE_URL }} style={{
+            display: "flex", alignItems: "center", gap: 6,
+            padding: "7px 14px", borderRadius: 8,
+            border: "1.5px solid #EDE9FE", background: "white",
+            color: "#6B7280", fontWeight: 600, fontSize: 13, cursor: "pointer", marginRight: 8,
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+            Suite
+          </button>
+        )}
         <div style={{ display: "flex", gap: 8, marginLeft: "auto", flexShrink: 0 }}>
           <button onClick={() => setSection("preview")} style={{
             display: "flex", alignItems: "center", gap: 6,
@@ -299,6 +310,19 @@ export default function App() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
             Genera PDF
           </button>
+          {urlParams.current.commessaId && (
+            <button onClick={handleSave} style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "7px 14px", borderRadius: 8,
+              border: "1.5px solid #C4B5FD", background: "white",
+              color: "#7C3AED", fontWeight: 600, fontSize: 13, cursor: "pointer",
+              ...(saveStatus === 'saved' ? { background: "#EAF3DE", color: "#3B6D11", borderColor: "#97C459" } :
+                 saveStatus === 'error' ? { background: "#FCEBEB", color: "#A32D2D", borderColor: "#F09595" } : {}),
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              {saveStatus === 'saving' ? 'Salvo...' : saveStatus === 'saved' ? '✓ Salvato' : saveStatus === 'error' ? '✗ Errore' : 'Salva'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -337,8 +361,8 @@ export default function App() {
             <div ref={leftPanelRef} className="no-print" style={{
               background: "white", borderRadius: 12,
               boxShadow: "0 2px 12px rgba(91,33,182,0.08)",
-              position: "sticky", top: 68, maxHeight: "calc(100vh - 88px)", overflowY: "auto",
-              border: "1px solid #EDE9FE", overflow: "hidden",
+              position: "sticky", top: 68, maxHeight: "calc(100vh - 88px)",
+              border: "1px solid #EDE9FE", display: "flex", flexDirection: "column",
             }}>
               <div style={{
                 display: "flex", alignItems: "center", gap: 10,
@@ -352,7 +376,7 @@ export default function App() {
                   <div style={{ fontSize: 11, color: "#8B5CF6", marginTop: 1 }}>Piano Operativo di Sicurezza</div>
                 </div>
               </div>
-              <div style={{ padding: "14px 18px" }}>
+              <div style={{ padding: "14px 18px", overflowY: "auto", flex: 1 }}>
 
               {section === "frontespizio" && <InfoBox>Il frontespizio non si compila direttamente. Riprende automaticamente i dati inseriti nelle sezioni successive.</InfoBox>}
               {section === "dichiarazioni" && <DichiarazioniPanel pos={pos} />}
