@@ -470,39 +470,72 @@ export default function DichiarazioniPanel({ pos }: { pos: PosData }) {
     setSelected(prev => ({ ...prev, [id]: !prev[id] }))
   }
 
+  function getDocHtml(DocComp: React.ComponentType<{pos: PosData}>, pos: PosData): string {
+    const style = `
+      body{margin:18mm 20mm;font-family:'Times New Roman',serif;font-size:10pt;line-height:1.6;color:#1E1B2E;}
+      @page{size:A4;margin:0;}
+      table{width:100%;border-collapse:collapse;}
+      td{border:0.5pt solid #D1D5DB;padding:5px 8px;}
+      ul{padding-left:20px;}
+      @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+    `
+    // Serializza il componente React come stringa HTML usando innerHTML
+    const container = document.createElement('div')
+    const root = (window as any).ReactDOM
+      ? (window as any).ReactDOM.createRoot(container)
+      : null
+
+    // Alternativa: usa window.print() con iframe
+    return ''
+  }
+
+  function scaricaDocumento(doc: typeof DOCS[0], pos: PosData) {
+    const committente = pos.committente.nomeDitta.replace(/[^a-zA-Z0-9]/g, '_').slice(0,20)
+    const filename = `${String(doc.id).padStart(2,'0')}_${slug(doc.nome)}_${committente}.html`
+
+    // Creo un iframe nascosto, ci metto il documento e triggero la stampa
+    const DocComp = DOC_COMPONENTS[doc.id - 1]
+    const container = document.createElement('div')
+    container.style.display = 'none'
+    document.body.appendChild(container)
+
+    // Uso un approccio blob URL con il markup serializzato via outerHTML
+    const tempDiv = document.createElement('div')
+    document.body.appendChild(tempDiv)
+
+    import('react-dom/client').then(({ createRoot }) => {
+      const root = createRoot(tempDiv)
+      root.render(React.createElement(DocComp, { pos }))
+      setTimeout(() => {
+        const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>${doc.nome}</title>
+<style>
+body{margin:18mm 20mm;font-family:'Times New Roman',serif;font-size:10pt;line-height:1.6;color:#1E1B2E;}
+table{width:100%;border-collapse:collapse;}
+td{border:0.5pt solid #D1D5DB;padding:5px 8px;vertical-align:top;}
+ul{padding-left:20px;margin-bottom:10px;}
+p{margin-bottom:10px;text-align:justify;}
+@media print{@page{size:A4;margin:18mm 20mm;}}
+</style></head><body>${tempDiv.innerHTML}</body></html>`
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = filename
+        a.click()
+        setTimeout(() => URL.revokeObjectURL(url), 1000)
+        root.unmount()
+        document.body.removeChild(tempDiv)
+      }, 100)
+    })
+  }
+
   async function esportaZip() {
     setExporting(true)
-    try {
-      const JSZip = (await import('jszip')).default
-      const zip = new JSZip()
-      const committente = pos.committente.nomeDitta.replace(/[^a-zA-Z0-9]/g, '_').slice(0,20)
-
-      for (const doc of DOCS) {
-        if (!selected[doc.id]) continue
-        const DocComp = DOC_COMPONENTS[doc.id - 1]
-        const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-          <style>
-            body{margin:0;padding:0;font-family:'Times New Roman',serif;}
-            @page{size:A4;margin:0;}
-            @media print{body{-webkit-print-color-adjust:exact;}}
-          </style></head><body>${require('react-dom/server').renderToStaticMarkup(
-            React.createElement(DocComp, { pos })
-          )}</body></html>`
-
-        const filename = `${String(doc.id).padStart(2,'0')}_${slug(doc.nome)}_${committente}.html`
-        zip.file(filename, html)
-      }
-
-      const blob = await zip.generateAsync({ type: 'blob' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `Dichiarazioni_${committente}_${oggi().replace(/\//g,'-')}.zip`
-      a.click()
-      URL.revokeObjectURL(url)
-    } catch(e) {
-      console.error(e)
-      alert('Errore durante l\'esportazione')
+    const docsToExport = DOCS.filter(d => selected[d.id])
+    for (let i = 0; i < docsToExport.length; i++) {
+      scaricaDocumento(docsToExport[i], pos)
+      await new Promise(r => setTimeout(r, 300))
     }
     setExporting(false)
   }
