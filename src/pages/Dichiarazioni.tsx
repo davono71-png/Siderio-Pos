@@ -610,3 +610,39 @@ p{margin-bottom:10px;text-align:justify;}
     </div>
   )
 }
+
+
+// ─── EXPORT NAMED: preview colonna centrale ──────────────────────────────────
+export function DichiarazioniPreview({ pos }: { pos: PosData }) {
+  const [docAttivo, setDocAttivo] = React.useState(1)
+
+  return (
+    <div>
+      {/* Selettore rapido documento */}
+      <div className="no-print" style={{
+        display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 16,
+        background: 'white', borderRadius: 10, padding: '8px 12px',
+        border: '1px solid #EDE9FE', boxShadow: '0 1px 4px rgba(91,33,182,0.06)',
+      }}>
+        {DOCS.map(doc => (
+          <button key={doc.id} onClick={() => setDocAttivo(doc.id)} style={{
+            fontSize: 10, fontWeight: docAttivo === doc.id ? 700 : 400,
+            padding: '3px 10px', borderRadius: 20, cursor: 'pointer',
+            border: `1px solid ${docAttivo === doc.id ? '#7C3AED' : '#E5E7EB'}`,
+            background: docAttivo === doc.id ? '#EDE9FE' : 'transparent',
+            color: docAttivo === doc.id ? '#5B21B6' : '#6B7280',
+            whiteSpace: 'nowrap',
+          }}>
+            {doc.id}. {doc.nome.split(' ').slice(0,3).join(' ')}...
+          </button>
+        ))}
+      </div>
+
+      {/* Documento attivo */}
+      {(() => {
+        const DocComp = DOC_COMPONENTS[docAttivo - 1]
+        return <DocComp pos={pos} />
+      })()}
+    </div>
+  )
+}
