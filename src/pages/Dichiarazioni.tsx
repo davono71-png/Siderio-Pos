@@ -1,6 +1,20 @@
 // @ts-nocheck
 import React, { useState } from 'react'
 import type { PosData } from '../types/pos'
+import { persone } from '../data/personale'
+
+// Helper: trova nome persona da id
+function getNome(id: string): string {
+  const p = persone.find(x => x.id === id)
+  return p ? p.nome : id.toUpperCase()
+}
+
+// Helper: formatta data ISO in italiano
+function formatData(iso: string): string {
+  if (!iso) return ''
+  const [y, m, d] = iso.split('-')
+  return `${d}/${m}/${y}`
+}
 
 // ─── DATI FISSI ARCHE' ITALIA ─────────────────────────────────────────────────
 const ARCHE = {
@@ -161,9 +175,17 @@ function Doc2({ pos }: { pos: PosData }) {
       in qualità di legale rappresentante della Ditta: <strong>{ARCHE.ragioneSociale}</strong><br />
       ed in riferimento ai lavori da eseguire presso <strong>{pos.committente.nomeDitta}</strong><br />
       {pos.committente.indirizzoCantiere}<br />
-      della durata dal <strong>{pos.durataCantiere.periodoDa}</strong> al <strong>{pos.durataCantiere.periodoA}</strong></p>
+      della durata dal <strong>{formatData(pos.durataCantiere.periodoDa)}</strong> al <strong>{formatData(pos.durataCantiere.periodoA)}</strong></p>
       <p style={bodyStyle}><strong>DICHIARA</strong></p>
-      <p style={bodyStyle}>che il preposto di cantiere è il sig. <strong>{ARCHE.preposto}</strong> (che agisce anche in qualità di DATORE di LAVORO), in assenza, il sig. <strong>{ARCHE.prepostoSostituto}</strong> gestisce le disposizioni in materia di salute e sicurezza del cantiere</p>
+      {(() => {
+        const datore = pos.personaleCantiere.find(p => p.ruolo === 'DATORE DI LAVORO')
+        const preposto = datore ? getNome(datore.personaId) : ARCHE.preposto
+        const altri = pos.personaleCantiere.filter(p => p.ruolo !== 'DATORE DI LAVORO')
+        const sostituto = altri.length > 0 ? getNome(altri[0].personaId) : ARCHE.prepostoSostituto
+        return (
+          <p style={bodyStyle}>che il preposto di cantiere è il sig. <strong>{preposto}</strong> (che agisce anche in qualità di DATORE di LAVORO), in assenza, il sig. <strong>{sostituto}</strong> gestisce le disposizioni in materia di salute e sicurezza del cantiere</p>
+        )
+      })()}
       <p style={bodyStyle}>e hanno ricevuto dal Coordinatore per la Sicurezza le informazioni sulla natura dei luoghi in cui saranno eseguiti i lavori in appalto, sulle condizioni ambientali, sui rischi specifici derivanti dallo stato dell'area e/o zona di realizzazione del lavoro e che gli stessi e tutti i lavoratori sotto indicati hanno ricevuto un'adeguata formazione ed informazione sui rischi specifici propri della loro attività, nonché delle misure di prevenzione e protezione da adottare in materia di sicurezza sul lavoro e di tutela dell'ambiente.</p>
       <p style={bodyStyle}>In relazione a tutto quanto sopra dichiarato l'impresa si impegna a comunicare tempestivamente ogni ulteriore variazione.</p>
       <Firma />
@@ -196,10 +218,22 @@ function Doc3({ pos }: { pos: PosData }) {
         <li><strong>Medico Competente</strong> nella persona di <strong>{ARCHE.medicoCompetente}</strong></li>
         <li><strong>Rappresentante dei Lavoratori per la sicurezza</strong> nella persona di <strong>{ARCHE.rls}</strong></li>
       </ul>
-      <p style={bodyStyle}>La figura del <strong>preposto</strong> sarà svolta da <strong>{ARCHE.preposto}</strong> e in sua assenza <strong>{ARCHE.prepostoSostituto}</strong></p>
-      <p style={bodyStyle}>E quella degli <strong>addetti alle emergenze</strong>:<br />
-      <strong>primo soccorso</strong> {ARCHE.primoSoccorso}<br />
-      <strong>prevenzione incendi</strong> {ARCHE.prevInc}</p>
+      {(() => {
+        const datore = pos.personaleCantiere.find(p => p.ruolo === 'DATORE DI LAVORO')
+        const preposto = datore ? getNome(datore.personaId) : ARCHE.preposto
+        const altri = pos.personaleCantiere.filter(p => p.ruolo !== 'DATORE DI LAVORO')
+        const sostituto = altri.length > 0 ? getNome(altri[0].personaId) : ARCHE.prepostoSostituto
+        const primoSoccorso = pos.addettiEmergenza.find(e => e.ruoloEmergenza === 'ADDETTO I SOCCORSO')
+        const antincendio = pos.addettiEmergenza.find(e => e.ruoloEmergenza === 'ADDETTO ANTINCENDIO')
+        return (
+          <>
+            <p style={bodyStyle}>La figura del <strong>preposto</strong> sarà svolta da <strong>{preposto}</strong> e in sua assenza <strong>{sostituto}</strong></p>
+            <p style={bodyStyle}>E quella degli <strong>addetti alle emergenze</strong>:<br />
+            <strong>primo soccorso</strong> {primoSoccorso ? getNome(primoSoccorso.personaId) : ARCHE.primoSoccorso}<br />
+            <strong>prevenzione incendi</strong> {antincendio ? getNome(antincendio.personaId) : ARCHE.prevInc}</p>
+          </>
+        )
+      })()}
       <p style={bodyStyle}>Si allegano alla dichiarazione copie degli attestati dei corsi e nomina dei responsabili.</p>
       <Firma />
     </div>
@@ -345,16 +379,24 @@ function Doc9({ pos }: { pos: PosData }) {
       <p style={bodyStyle}>L'impresa <strong>{ARCHE.ragioneSociale}</strong> comunica i nominativi delle figure addette alla sicurezza:</p>
       <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 14, fontSize: '9.5pt' }}>
         <tbody>
-          {[
-            ['Datore di Lavoro', ARCHE.datoreLavoro],
-            ['RSPP - Responsabile Servizio Prevenzione e Protezione', ARCHE.rspp],
-            ['Medico Competente', ARCHE.medicoCompetente],
-            ['RLS - Rappresentante Lavoratori per la Sicurezza', ARCHE.rls],
-            ['Preposto', ARCHE.preposto],
-            ['Preposto sostituto', ARCHE.prepostoSostituto],
-            ['Addetto primo soccorso', ARCHE.primoSoccorso],
-            ['Addetto prevenzione incendi', ARCHE.prevInc],
-          ].map(([ruolo, nome]) => (
+          {(() => {
+            const datore = pos.personaleCantiere.find(p => p.ruolo === 'DATORE DI LAVORO')
+            const preposto = datore ? getNome(datore.personaId) : ARCHE.preposto
+            const altri = pos.personaleCantiere.filter(p => p.ruolo !== 'DATORE DI LAVORO')
+            const sostituto = altri.length > 0 ? getNome(altri[0].personaId) : ARCHE.prepostoSostituto
+            const primoSoccorso = pos.addettiEmergenza.find(e => e.ruoloEmergenza === 'ADDETTO I SOCCORSO')
+            const antincendio = pos.addettiEmergenza.find(e => e.ruoloEmergenza === 'ADDETTO ANTINCENDIO')
+            return [
+              ['Datore di Lavoro', pos.nostraDitta.datoreLavoro || ARCHE.datoreLavoro],
+              ['RSPP', pos.nostraDitta.rspp || ARCHE.rspp],
+              ['Medico Competente', pos.nostraDitta.medicoLavoro || ARCHE.medicoCompetente],
+              ['RLS', pos.nostraDitta.rls || ARCHE.rls],
+              ['Preposto', preposto],
+              ['Preposto sostituto', sostituto],
+              ['Addetto primo soccorso', primoSoccorso ? getNome(primoSoccorso.personaId) : ARCHE.primoSoccorso],
+              ['Addetto prevenzione incendi', antincendio ? getNome(antincendio.personaId) : ARCHE.prevInc],
+            ]
+          })().map(([ruolo, nome]) => (
             <tr key={ruolo}>
               <td style={{ border: '0.5pt solid #D1D5DB', padding: '5px 8px', background: '#FAFAFA', width: '55%', fontWeight: 500 }}>{ruolo}</td>
               <td style={{ border: '0.5pt solid #D1D5DB', padding: '5px 8px' }}>{nome}</td>
@@ -470,72 +512,57 @@ export default function DichiarazioniPanel({ pos }: { pos: PosData }) {
     setSelected(prev => ({ ...prev, [id]: !prev[id] }))
   }
 
-  function getDocHtml(DocComp: React.ComponentType<{pos: PosData}>, pos: PosData): string {
-    const style = `
-      body{margin:18mm 20mm;font-family:'Times New Roman',serif;font-size:10pt;line-height:1.6;color:#1E1B2E;}
-      @page{size:A4;margin:0;}
-      table{width:100%;border-collapse:collapse;}
-      td{border:0.5pt solid #D1D5DB;padding:5px 8px;}
-      ul{padding-left:20px;}
-      @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
-    `
-    // Serializza il componente React come stringa HTML usando innerHTML
-    const container = document.createElement('div')
-    const root = (window as any).ReactDOM
-      ? (window as any).ReactDOM.createRoot(container)
-      : null
-
-    // Alternativa: usa window.print() con iframe
-    return ''
-  }
-
-  function scaricaDocumento(doc: typeof DOCS[0], pos: PosData) {
-    const committente = pos.committente.nomeDitta.replace(/[^a-zA-Z0-9]/g, '_').slice(0,20)
-    const filename = `${String(doc.id).padStart(2,'0')}_${slug(doc.nome)}_${committente}.html`
-
-    // Creo un iframe nascosto, ci metto il documento e triggero la stampa
-    const DocComp = DOC_COMPONENTS[doc.id - 1]
-    const container = document.createElement('div')
-    container.style.display = 'none'
-    document.body.appendChild(container)
-
-    // Uso un approccio blob URL con il markup serializzato via outerHTML
-    const tempDiv = document.createElement('div')
-    document.body.appendChild(tempDiv)
-
-    import('react-dom/client').then(({ createRoot }) => {
-      const root = createRoot(tempDiv)
-      root.render(React.createElement(DocComp, { pos }))
-      setTimeout(() => {
-        const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-<title>${doc.nome}</title>
-<style>
-body{margin:18mm 20mm;font-family:'Times New Roman',serif;font-size:10pt;line-height:1.6;color:#1E1B2E;}
-table{width:100%;border-collapse:collapse;}
-td{border:0.5pt solid #D1D5DB;padding:5px 8px;vertical-align:top;}
-ul{padding-left:20px;margin-bottom:10px;}
-p{margin-bottom:10px;text-align:justify;}
-@media print{@page{size:A4;margin:18mm 20mm;}}
-</style></head><body>${tempDiv.innerHTML}</body></html>`
-        const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = filename
-        a.click()
-        setTimeout(() => URL.revokeObjectURL(url), 1000)
-        root.unmount()
-        document.body.removeChild(tempDiv)
-      }, 100)
-    })
-  }
-
   async function esportaZip() {
     setExporting(true)
-    const docsToExport = DOCS.filter(d => selected[d.id])
-    for (let i = 0; i < docsToExport.length; i++) {
-      scaricaDocumento(docsToExport[i], pos)
-      await new Promise(r => setTimeout(r, 300))
+    try {
+      const [{ default: jsPDF }, { default: html2canvas }, { default: JSZip }] =
+        await Promise.all([import('jspdf'), import('html2canvas'), import('jszip')])
+
+      const zip = new JSZip()
+      const committente = pos.committente.nomeDitta.replace(/[^a-zA-Z0-9]/g, '_').slice(0,20)
+      const docsToExport = DOCS.filter(d => selected[d.id])
+
+      for (const doc of docsToExport) {
+        const DocComp = DOC_COMPONENTS[doc.id - 1]
+
+        // Render temporaneo
+        const container = document.createElement('div')
+        container.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:white;'
+        document.body.appendChild(container)
+
+        const { createRoot } = await import('react-dom/client')
+        const root = createRoot(container)
+        root.render(React.createElement(DocComp, { pos }))
+        await new Promise(r => setTimeout(r, 200))
+
+        // Converti in canvas → PDF
+        const canvas = await html2canvas(container, {
+          scale: 2, useCORS: true, logging: false,
+          width: 794, windowWidth: 794,
+        })
+        const imgData = canvas.toDataURL('image/jpeg', 0.95)
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+        const pdfW = pdf.internal.pageSize.getWidth()
+        const pdfH = (canvas.height * pdfW) / canvas.width
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH)
+
+        const filename = `${String(doc.id).padStart(2,'0')}_${slug(doc.nome)}_${committente}.pdf`
+        zip.file(filename, pdf.output('arraybuffer'))
+
+        root.unmount()
+        document.body.removeChild(container)
+      }
+
+      const blob = await zip.generateAsync({ type: 'blob' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Dichiarazioni_${committente}_${oggi().replace(/\//g,'-')}.zip`
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(url), 2000)
+    } catch(e) {
+      console.error('Export error:', e)
+      alert('Errore durante l'esportazione. Riprova.')
     }
     setExporting(false)
   }
