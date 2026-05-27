@@ -562,7 +562,7 @@ export default function DichiarazioniPanel({ pos }: { pos: PosData }) {
       setTimeout(() => URL.revokeObjectURL(url), 2000)
     } catch(e) {
       console.error('Export error:', e)
-      alert('Errore durante l'esportazione. Riprova.')
+      alert('Errore durante l\'esportazione. Riprova.')
     }
     setExporting(false)
   }
