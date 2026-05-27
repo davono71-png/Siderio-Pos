@@ -155,7 +155,7 @@ function ThumbnailStrip() {
 export default function App() {
   const [section, setSection] = useState<Section>("frontespizio")
   const [pos, setPos] = useState<PosData>(initialPosData)
-  const [appReady, setAppReady] = useState(false)
+  const [appReady, setAppReady] = useState(true) // Demo: sempre pronto
   const urlParams = useRef(getUrlParams())
   const { loadPos } = usePosStorage(urlParams.current.commessaId)
 
@@ -195,7 +195,6 @@ export default function App() {
 
       } catch(e) { console.error('Init error:', e) }
       setLoading(false)
-      setAppReady(true)
       setAppReady(true)
     }
     init()
