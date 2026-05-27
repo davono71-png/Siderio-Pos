@@ -375,9 +375,9 @@ export default function App() {
               {section === "rischi"       && <Capitolo3Rischi pos={pos} />}
               {section === "emergenze"    && <><Capitolo4Emergenze pos={pos} /><Capitolo5Psc pos={pos} /></>}
             </div>
+            {/* Colonna miniature — sempre visibile */}
+            <ThumbnailStrip />
           </div>
-          {/* Colonna miniature — sempre visibile */}
-          <ThumbnailStrip />
         )}
       </div>
     </div>
