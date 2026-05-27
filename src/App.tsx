@@ -33,6 +33,7 @@ const MENU: { key: Section; label: string }[] = [
   { key: "opere",        label: "Le Opere" },
   { key: "rischi",       label: "Rischi Specifici" },
   { key: "emergenze",    label: "Emergenze & PSC" },
+  { key: "dichiarazioni", label: "Dichiarazioni" },
   { key: "preview",      label: "Preview / PDF" },
 ]
 
