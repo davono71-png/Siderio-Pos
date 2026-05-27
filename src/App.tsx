@@ -48,23 +48,23 @@ function getUrlParams() {
 
 // ─── MINIATURE PAGINE ────────────────────────────────────────────────────────
 const PAGINE = [
-  { n: 1,  label: "Frontespizio" },
-  { n: 2,  label: "Sommario" },
-  { n: 3,  label: "0.1 Dati doc." },
-  { n: 4,  label: "0.5 Appaltatrice" },
-  { n: 5,  label: "0.7 Cantiere" },
-  { n: 6,  label: "1. Personale" },
-  { n: 7,  label: "1.4 DPI" },
-  { n: 8,  label: "2. Opere" },
-  { n: 9,  label: "3. Rischi 1" },
-  { n: 10, label: "3. Rischi 2" },
-  { n: 11, label: "3. Rischi 3" },
-  { n: 12, label: "4. Emergenze" },
-  { n: 13, label: "5. PSC 1" },
-  { n: 14, label: "5. PSC 2" },
+  { n: 1,  label: "Frontespizio",   section: "frontespizio" },
+  { n: 2,  label: "Sommario",       section: "frontespizio" },
+  { n: 3,  label: "0.1 Dati doc.",  section: "cantiere" },
+  { n: 4,  label: "0.5 Appaltatrice", section: "cantiere" },
+  { n: 5,  label: "0.7 Cantiere",   section: "cantiere" },
+  { n: 6,  label: "1. Personale",   section: "personale" },
+  { n: 7,  label: "1.4 DPI",        section: "personale" },
+  { n: 8,  label: "2. Opere",       section: "opere" },
+  { n: 9,  label: "3. Rischi 1",    section: "rischi" },
+  { n: 10, label: "3. Rischi 2",    section: "rischi" },
+  { n: 11, label: "3. Rischi 3",    section: "rischi" },
+  { n: 12, label: "4. Emergenze",   section: "emergenze" },
+  { n: 13, label: "5. PSC 1",       section: "emergenze" },
+  { n: 14, label: "5. PSC 2",       section: "emergenze" },
 ]
 
-function ThumbnailStrip() {
+function ThumbnailStrip({ onSectionChange }: { onSectionChange: (s: string) => void }) {
   const [activePage, setActivePage] = React.useState(1)
   const stripRef = React.useRef<HTMLDivElement>(null)
 
@@ -97,11 +97,12 @@ function ThumbnailStrip() {
     return () => observer.disconnect()
   }, [])
 
-  function scrollToPage(n: number) {
+  function scrollToPage(n: number, section?: string) {
     const pages = document.querySelectorAll('.page-a4')
     const page = pages[n - 1]
     if (page) page.scrollIntoView({ behavior: 'smooth', block: 'start' })
     setActivePage(n)
+    if (section) onSectionChange(section)
   }
 
   return (
@@ -122,7 +123,7 @@ function ThumbnailStrip() {
         <div
           key={p.n}
           data-page={p.n}
-          onClick={() => scrollToPage(p.n)}
+          onClick={() => scrollToPage(p.n, p.section)}
           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer' }}
         >
           <div style={{
@@ -376,7 +377,7 @@ export default function App() {
               {section === "emergenze"    && <><Capitolo4Emergenze pos={pos} /><Capitolo5Psc pos={pos} /></>}
             </div>
             {/* Colonna miniature — sempre visibile */}
-            <ThumbnailStrip />
+            <ThumbnailStrip onSectionChange={changeSection} />
           </div>
         )}
       </div>
