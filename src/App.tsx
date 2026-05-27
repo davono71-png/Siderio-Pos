@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react"
+// @ts-nocheck
+import React, { useState, useEffect, useRef } from "react"
 import DocumentoCompleto from "./pages/DocumentoCompleto"
 import Frontespizio from "./pages/Frontespizio"
 import Capitolo0Cantiere from "./pages/Capitolo0Cantiere"
@@ -17,10 +18,10 @@ import { initialPosData } from "./data/initialPosData"
 import type { PosData } from "./types/pos"
 import { usePosStorage } from "./hooks/usePosStorage"
 
-const PRIMARY = "#1d75bb"
-const SUITE_URL = 'https://siderio-suite-app.vercel.app'
-const GREEN = "#22843a"
-const AMBER = "#b45309"
+const PRIMARY = "#7C3AED" // eslint-disable-line
+// const SUITE_URL = 'https://siderio-suite-app.vercel.app'
+// const GREEN = "#22843a"
+// const AMBER = "#b45309"
 
 type Section = "frontespizio" | "cantiere" | "personale" | "opere" | "rischi" | "emergenze" | "preview"
 
@@ -44,12 +45,129 @@ function getUrlParams() {
   }
 }
 
+
+// ─── MINIATURE PAGINE ────────────────────────────────────────────────────────
+const PAGINE = [
+  { n: 1,  label: "Frontespizio",   section: "frontespizio" },
+  { n: 2,  label: "Sommario",       section: "frontespizio" },
+  { n: 3,  label: "0.1 Dati doc.",  section: "cantiere" },
+  { n: 4,  label: "0.5 Appaltatrice", section: "cantiere" },
+  { n: 5,  label: "0.7 Cantiere",   section: "cantiere" },
+  { n: 6,  label: "1. Personale",   section: "personale" },
+  { n: 7,  label: "1.4 DPI",        section: "personale" },
+  { n: 8,  label: "2. Opere",       section: "opere" },
+  { n: 9,  label: "3. Rischi 1",    section: "rischi" },
+  { n: 10, label: "3. Rischi 2",    section: "rischi" },
+  { n: 11, label: "3. Rischi 3",    section: "rischi" },
+  { n: 12, label: "4. Emergenze",   section: "emergenze" },
+  { n: 13, label: "5. PSC 1",       section: "emergenze" },
+  { n: 14, label: "5. PSC 2",       section: "emergenze" },
+]
+
+function ThumbnailStrip({ onSectionChange }: { onSectionChange: (s: string) => void }) {
+  const [activePage, setActivePage] = React.useState(1)
+  const stripRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    // IntersectionObserver: rileva quale pagina è visibile
+    const pages = document.querySelectorAll('.page-a4')
+    if (!pages.length) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const idx = Array.from(pages).indexOf(entry.target as HTMLElement)
+            if (idx !== -1) {
+              const pageNum = idx + 1
+              setActivePage(pageNum)
+              // Scrolla la strip per tenere la miniatura attiva in vista
+              if (stripRef.current) {
+                const thumb = stripRef.current.querySelector(`[data-page="${pageNum}"]`) as HTMLElement
+                if (thumb) thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+              }
+            }
+          }
+        })
+      },
+      { threshold: 0.4 }
+    )
+
+    pages.forEach(p => observer.observe(p))
+    return () => observer.disconnect()
+  }, [])
+
+  function scrollToPage(n: number, section?: string) {
+    const pages = document.querySelectorAll('.page-a4')
+    const page = pages[n - 1]
+    if (page) page.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    setActivePage(n)
+    if (section) onSectionChange(section)
+  }
+
+  return (
+    <div
+      ref={stripRef}
+      className="no-print"
+      style={{
+        width: 110, flexShrink: 0, background: 'white',
+        borderLeft: '1px solid #EDE9FE',
+        overflowY: 'auto', overflowX: 'hidden',
+        position: 'sticky', top: 68,
+        height: 'calc(100vh - 68px)',
+        padding: '12px 8px',
+        display: 'flex', flexDirection: 'column', gap: 10,
+      }}
+    >
+      {PAGINE.map(p => (
+        <div
+          key={p.n}
+          data-page={p.n}
+          onClick={() => scrollToPage(p.n, p.section)}
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer' }}
+        >
+          <div style={{
+            width: 88, height: 124, borderRadius: 4, overflow: 'hidden',
+            border: activePage === p.n ? '2px solid #7C3AED' : '1.5px solid #E5E7EB',
+            boxShadow: activePage === p.n ? '0 0 0 2px rgba(124,58,237,0.2)' : 'none',
+            background: '#FAFAFA',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'border-color 0.15s',
+          }}>
+            <div style={{
+              fontSize: 7, color: activePage === p.n ? '#5B21B6' : '#9CA3AF',
+              textAlign: 'center', padding: '6px 4px', lineHeight: 1.4,
+              fontWeight: activePage === p.n ? 700 : 400,
+            }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: activePage === p.n ? '#7C3AED' : '#D1D5DB', marginBottom: 4 }}>{p.n}</div>
+              {p.label}
+            </div>
+          </div>
+          <span style={{
+            fontSize: 10, fontWeight: activePage === p.n ? 700 : 400,
+            color: activePage === p.n ? '#7C3AED' : '#9CA3AF',
+          }}>{p.n}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function App() {
   const [section, setSection] = useState<Section>("frontespizio")
+  const leftPanelRef = React.useRef<HTMLDivElement>(null)
+
+  function changeSection(s: Section) {
+    setSection(s)
+    // Reset scroll pannello sinistro in cima
+    if (leftPanelRef.current) {
+      leftPanelRef.current.scrollTop = 0
+    }
+  }
   const [pos, setPos] = useState<PosData>(initialPosData)
-  const [appReady, setAppReady] = useState(false)
+  const [appReady, setAppReady] = useState(true) // Demo: sempre pronto
   const urlParams = useRef(getUrlParams())
-  const { loadPos, savePos, saveStatus, setLoading } = usePosStorage(urlParams.current.commessaId)
+  const { loadPos } = usePosStorage(urlParams.current.commessaId)
 
   // All'avvio: carica da Supabase se c'è commessa_id, altrimenti pre-compila con URL params
   useEffect(() => {
@@ -92,15 +210,9 @@ export default function App() {
     init()
   }, [])
 
-  // Salvataggio automatico ogni 60 secondi se c'è commessa_id
-  useEffect(() => {
-    if (!appReady || !urlParams.current.commessaId) return
-    const interval = setInterval(() => {
-      savePos(pos, urlParams.current.commessaId!)
-    }, 60000)
-    return () => clearInterval(interval)
-  }, [appReady, pos])
+  // Autosave disabilitato in modalità demo
 
+  // eslint-disable-next-line
   function handleSave() {
     if (urlParams.current.commessaId) {
       savePos(pos, urlParams.current.commessaId)
@@ -109,29 +221,35 @@ export default function App() {
 
   if (!appReady) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f5f7fb" }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#F5F3FF" }}>
         <div style={{ textAlign: "center" }}>
-          <div style={{ width: 44, height: 44, borderRadius: "50%", background: PRIMARY, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 20, margin: "0 auto 12px" }}>S</div>
-          <div style={{ color: PRIMARY, fontWeight: 700, fontSize: 14, letterSpacing: 2 }}>SIDERIO POS</div>
-          <div style={{ color: "#94a3b8", fontSize: 12, marginTop: 6 }}>Caricamento...</div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6, justifyContent: "center", marginBottom: 12 }}>
+            <span style={{ fontSize: 28, fontWeight: 900, color: "#3B0764", letterSpacing: -0.5 }}>CC</span>
+            <span style={{ fontSize: 14, fontWeight: 400, color: "#8B5CF6" }}>SIDERIO</span>
+          </div>
+          <div style={{ color: "#94a3b8", fontSize: 12 }}>Caricamento...</div>
         </div>
       </div>
     )
   }
 
-  const hasCommessa = !!urlParams.current.commessaId
+  const hasCommessa = false // Demo: nessun collegamento a Suite
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
+    <div style={{ minHeight: "100vh", background: "#F5F3FF" }}>
       {/* ── TOPBAR ── */}
       <div className="no-print" style={{
-        background: PRIMARY, padding: "0 20px",
+        background: "white", padding: "0 20px",
         display: "flex", alignItems: "center", gap: 0,
         position: "sticky", top: 0, zIndex: 50,
-        boxShadow: "0 2px 8px rgba(29,117,187,0.18)", minHeight: 52,
+        boxShadow: "0 1px 4px rgba(91,33,182,0.08)",
+        borderBottom: "1px solid #E5E7EB", minHeight: 52,
       }}>
-        <div style={{ width: 34, height: 34, borderRadius: "50%", background: "white", color: PRIMARY, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 16, marginRight: 12, flexShrink: 0 }}>S</div>
-        <span style={{ color: "white", fontWeight: 900, fontSize: 14, letterSpacing: 2, marginRight: 24, flexShrink: 0 }}>SIDERIO POS</span>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 5, marginRight: 28, flexShrink: 0 }}>
+          <span style={{ fontSize: 20, fontWeight: 900, color: "#3B0764", letterSpacing: -0.5 }}>S</span>
+          <span style={{ fontSize: 12, fontWeight: 400, color: "#8B5CF6" }}>SIDERIO</span>
+        </div>
+
 
         {/* Bottone torna a Commesse */}
         {hasCommessa && (
@@ -150,76 +268,90 @@ export default function App() {
 
         <div style={{ display: "flex", gap: 4, flexWrap: "wrap", flex: 1 }}>
           {MENU.map(({ key, label }) => (
-            <button key={key} onClick={() => setSection(key)} style={{
-              padding: "6px 14px", borderRadius: 8, border: "none", cursor: "pointer",
-              fontSize: 13, fontWeight: 600, transition: "background 0.15s",
-              background: section === key ? "white" : "rgba(255,255,255,0.12)",
-              color: section === key ? PRIMARY : "white",
+            <button key={key} onClick={() => changeSection(key as Section)} style={{
+              padding: "14px 14px", border: "none", cursor: "pointer",
+              fontSize: 13, fontWeight: section === key ? 700 : 500,
+              background: "transparent",
+              color: section === key ? "#7C3AED" : "#6B7280",
+              borderBottom: section === key ? "2px solid #7C3AED" : "2px solid transparent",
+              transition: "all 0.15s",
             }}>{label}</button>
           ))}
         </div>
 
-        {/* Bottone Salva — visibile solo se aperto da Suite */}
-        {hasCommessa && (
-          <button onClick={handleSave} style={{
-            marginLeft: 12, padding: "7px 18px", borderRadius: 10,
-            border: "2px solid white", background: "transparent",
-            color: "white", fontWeight: 700, fontSize: 13, cursor: "pointer",
-            flexShrink: 0,
-            ...(saveStatus === 'saved' ? { background: GREEN, border: `2px solid ${GREEN}` } :
-               saveStatus === 'saving' ? { opacity: 0.7 } :
-               saveStatus === 'error' ? { background: "#dc2626", border: "2px solid #dc2626" } : {}),
+        <div style={{ display: "flex", gap: 8, marginLeft: "auto", flexShrink: 0 }}>
+          <button onClick={() => setSection("preview")} style={{
+            display: "flex", alignItems: "center", gap: 6,
+            padding: "7px 14px", borderRadius: 8,
+            border: "1.5px solid #C4B5FD", background: "white",
+            color: "#7C3AED", fontWeight: 600, fontSize: 13, cursor: "pointer",
           }}>
-            {saveStatus === 'saving' ? '...' :
-             saveStatus === 'saved' ? '✓ Salvato' :
-             saveStatus === 'error' ? '✗ Errore' : '💾 Salva'}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Anteprima
           </button>
-        )}
+          <button onClick={() => { setSection("preview"); setTimeout(()=>window.print(),400) }} style={{
+            display: "flex", alignItems: "center", gap: 6,
+            padding: "7px 14px", borderRadius: 8,
+            border: "none", background: "#7C3AED",
+            color: "white", fontWeight: 600, fontSize: 13, cursor: "pointer",
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+            Genera PDF
+          </button>
+        </div>
       </div>
 
       {/* ── BODY ── */}
       <div style={{ padding: 24 }}>
         {section === "preview" ? (
-          <div>
-            <div className="no-print" style={{
-              background: "white", borderRadius: 12, padding: 20,
-              boxShadow: "0 2px 12px rgba(29,117,187,0.08)", maxWidth: 360, marginBottom: 24,
-              borderLeft: `4px solid ${PRIMARY}`,
-            }}>
-              {hasCommessa && (
-                <div style={{ marginBottom: 12 }}>
-                  <button onClick={handleSave} style={{
-                    width: "100%", padding: "10px 0", background: PRIMARY, color: "white",
-                    border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer", marginBottom: 8,
-                  }}>
-                    {saveStatus === 'saving' ? 'Salvo...' : saveStatus === 'saved' ? '✓ Salvato!' : '💾 Salva POS'}
-                  </button>
-                </div>
-              )}
-              <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>
-                Anteprima completa. Usa il pulsante per stampare o salvare in PDF.
-              </p>
-              <button type="button" onClick={() => window.print()} style={{
-                background: AMBER, color: "white", border: "none", borderRadius: 10,
-                padding: "10px 20px", fontWeight: 700, fontSize: 14, cursor: "pointer", width: "100%",
+          <div style={{ display: "flex", gap: 0 }}>
+            {/* Documento + toolbar */}
+            <div style={{ flex: 1 }}>
+              <div className="no-print" style={{
+                background: "white", borderRadius: 12, padding: 16,
+                boxShadow: "0 2px 12px rgba(91,33,182,0.08)", maxWidth: 360, marginBottom: 20,
+                borderLeft: "4px solid #7C3AED",
               }}>
-                🖨 Stampa / Salva PDF
-              </button>
-            </div>
-            <DocumentoCompleto pos={pos} />
-          </div>
-        ) : (
-          <div style={{ maxWidth: 1400, margin: "0 auto", display: "grid", gridTemplateColumns: "400px 1fr", gap: 24 }}>
-            <div className="no-print" style={{
-              background: "white", borderRadius: 12, padding: 20,
-              boxShadow: "0 2px 12px rgba(29,117,187,0.08)",
-              position: "sticky", top: 68, maxHeight: "calc(100vh - 88px)", overflowY: "auto",
-              borderTop: `3px solid ${PRIMARY}`,
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-                <div style={{ width: 28, height: 28, borderRadius: "50%", background: PRIMARY, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 13 }}>S</div>
-                <h1 style={{ fontSize: 17, fontWeight: 800, color: PRIMARY, margin: 0 }}>Compilazione POS</h1>
+                <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>
+                  Anteprima completa del documento.
+                </p>
+                <button type="button" onClick={() => window.print()} style={{
+                  background: "#7C3AED", color: "white", border: "none", borderRadius: 10,
+                  padding: "10px 20px", fontWeight: 700, fontSize: 14, cursor: "pointer", width: "100%",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                  Stampa / Salva PDF
+                </button>
+
               </div>
+              <div id="doc-scroll-area">
+                <DocumentoCompleto pos={pos} />
+              </div>
+            </div>
+
+            </div>
+        ) : (
+          <div style={{ maxWidth: 1400, margin: "0 auto", display: "grid", gridTemplateColumns: "400px 1fr 110px", gap: 0 }}>
+            <div ref={leftPanelRef} className="no-print" style={{
+              background: "white", borderRadius: 12,
+              boxShadow: "0 2px 12px rgba(91,33,182,0.08)",
+              position: "sticky", top: 68, maxHeight: "calc(100vh - 88px)", overflowY: "auto",
+              border: "1px solid #EDE9FE", overflow: "hidden",
+            }}>
+              <div style={{
+                display: "flex", alignItems: "center", gap: 10,
+                padding: "14px 18px 12px", borderBottom: "1px solid #EDE9FE",
+              }}>
+                <div style={{ width: 34, height: 34, borderRadius: 8, background: "#EDE9FE", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                </div>
+                <div>
+                  <h1 style={{ fontSize: 15, fontWeight: 700, color: "#1E1B2E", margin: 0 }}>Compilazione POS</h1>
+                  <div style={{ fontSize: 11, color: "#8B5CF6", marginTop: 1 }}>Piano Operativo di Sicurezza</div>
+                </div>
+              </div>
+              <div style={{ padding: "14px 18px" }}>
 
               {section === "frontespizio" && <InfoBox>Il frontespizio non si compila direttamente. Riprende automaticamente i dati inseriti nelle sezioni successive.</InfoBox>}
               {section === "cantiere"   && <CantierePanel pos={pos} setPos={setPos} />}
@@ -227,6 +359,7 @@ export default function App() {
               {section === "opere"      && <OperePanel pos={pos} setPos={setPos} />}
               {section === "rischi"     && <RischiPanel pos={pos} setPos={setPos} />}
               {section === "emergenze"  && <EmergenzePscPanel pos={pos} setPos={setPos} />}
+              </div>
             </div>
 
             <div>
@@ -237,6 +370,8 @@ export default function App() {
               {section === "rischi"       && <Capitolo3Rischi pos={pos} />}
               {section === "emergenze"    && <><Capitolo4Emergenze pos={pos} /><Capitolo5Psc pos={pos} /></>}
             </div>
+            {/* Colonna miniature — sempre visibile */}
+            <ThumbnailStrip onSectionChange={changeSection} />
           </div>
         )}
       </div>
