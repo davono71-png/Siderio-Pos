@@ -16,6 +16,7 @@ import EmergenzePscPanel from "./panels/EmergenzePscPanel"
 import InfoBox from "./components/form/Infobox"
 import { initialPosData } from "./data/initialPosData"
 import type { PosData } from "./types/pos"
+import DichiarazioniPanel from './pages/Dichiarazioni'
 import { usePosStorage } from "./hooks/usePosStorage"
 
 const PRIMARY = "#7C3AED" // eslint-disable-line
@@ -23,7 +24,7 @@ const PRIMARY = "#7C3AED" // eslint-disable-line
 // const GREEN = "#22843a"
 // const AMBER = "#b45309"
 
-type Section = "frontespizio" | "cantiere" | "personale" | "opere" | "rischi" | "emergenze" | "preview"
+type Section = "frontespizio" | "cantiere" | "personale" | "opere" | "rischi" | "emergenze" | "dichiarazioni" | "preview"
 
 const MENU: { key: Section; label: string }[] = [
   { key: "frontespizio", label: "Frontespizio" },
@@ -354,6 +355,7 @@ export default function App() {
               <div style={{ padding: "14px 18px" }}>
 
               {section === "frontespizio" && <InfoBox>Il frontespizio non si compila direttamente. Riprende automaticamente i dati inseriti nelle sezioni successive.</InfoBox>}
+              {section === "dichiarazioni" && <DichiarazioniPanel pos={pos} />}
               {section === "cantiere"   && <CantierePanel pos={pos} setPos={setPos} />}
               {section === "personale"  && <PersonalePanel pos={pos} setPos={setPos} />}
               {section === "opere"      && <OperePanel pos={pos} setPos={setPos} />}
