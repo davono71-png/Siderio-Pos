@@ -267,18 +267,19 @@ export default function App() {
           </a>
         )}
 
-        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", flex: 1 }}>
+        <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", display: "flex", gap: 0 }}>
           {MENU.map(({ key, label }) => (
             <button key={key} onClick={() => changeSection(key as Section)} style={{
-              padding: "14px 14px", border: "none", cursor: "pointer",
+              padding: "14px 12px", border: "none", cursor: "pointer",
               fontSize: 13, fontWeight: section === key ? 700 : 500,
               background: "transparent",
               color: section === key ? "#7C3AED" : "#6B7280",
               borderBottom: section === key ? "2px solid #7C3AED" : "2px solid transparent",
-              transition: "all 0.15s",
+              transition: "all 0.15s", whiteSpace: "nowrap",
             }}>{label}</button>
           ))}
         </div>
+        <div style={{ flex: 1 }} />
 
         {urlParams.current.commessaId && (
           <button onClick={() => { window.location.href = SUITE_URL }} style={{
