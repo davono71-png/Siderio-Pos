@@ -45,6 +45,26 @@ function getUrlParams() {
   }
 }
 
+type UrlParams = ReturnType<typeof getUrlParams>
+
+const LOCAL_DRAFT_PREFIX = 'siderio-pos:draft:'
+
+function getDraftKey({ commessaId, numero, cliente }: UrlParams) {
+  const key = commessaId || numero || cliente || 'standalone'
+  return `${LOCAL_DRAFT_PREFIX}${encodeURIComponent(key)}`
+}
+
+function createInitialPos(numero: string, cliente: string): PosData {
+  return {
+    ...initialPosData,
+    commessa: numero,
+    committente: {
+      ...initialPosData.committente,
+      nomeDitta: cliente,
+    },
+  }
+}
+
 
 // ─── MINIATURE PAGINE ────────────────────────────────────────────────────────
 const PAGINE: { n: number; label: string; section: Section }[] = [
@@ -167,7 +187,8 @@ export default function App() {
   const [pos, setPos] = useState<PosData>(initialPosData)
   const [appReady, setAppReady] = useState(false)
   const urlParams = useMemo(() => getUrlParams(), [])
-  const { loadPos, savePos, saveStatus } = usePosStorage()
+  const draftKey = useMemo(() => getDraftKey(urlParams), [urlParams])
+  const { loadPos, loadLocalPos, savePos, saveLocalPos, saveStatus } = usePosStorage()
 
   // All'avvio: carica da Supabase se c'è commessa_id, altrimenti pre-compila con URL params
   useEffect(() => {
@@ -181,39 +202,39 @@ export default function App() {
         if (saved) {
           setPos(saved)
         } else {
-          // Nuovo POS: pre-compila commessa e committente dall'URL
-          setPos({
-            ...initialPosData,
-            commessa: numero,
-            committente: {
-              ...initialPosData.committente,
-              nomeDitta: cliente,
-            },
-          })
+          const localDraft = loadLocalPos(draftKey)
+          if (localDraft) {
+            setPos(localDraft)
+          } else {
+            // Nuovo POS: pre-compila commessa e committente dall'URL
+            setPos(createInitialPos(numero, cliente))
+          }
         }
-      } else if (numero || cliente) {
-        // Parametri URL senza commessa_id (modalità standalone)
-        setPos({
-          ...initialPosData,
-          commessa: numero,
-          committente: {
-            ...initialPosData.committente,
-            nomeDitta: cliente,
-          },
-        })
+      } else {
+        const localDraft = loadLocalPos(draftKey)
+        if (localDraft) {
+          setPos(localDraft)
+        } else if (numero || cliente) {
+          // Parametri URL senza commessa_id (modalità standalone)
+          setPos(createInitialPos(numero, cliente))
+        } else {
+          setPos(initialPosData)
+        }
       }
 
       } catch(e) { console.error('Init error:', e) }
       setAppReady(true)
     }
     init()
-  }, [loadPos, urlParams])
+  }, [draftKey, loadLocalPos, loadPos, urlParams])
 
   // Autosave disabilitato in modalità demo
 
   function handleSave() {
     if (urlParams.commessaId) {
       void savePos(pos, urlParams.commessaId)
+    } else {
+      saveLocalPos(pos, draftKey)
     }
   }
 
@@ -308,19 +329,17 @@ export default function App() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
             Genera PDF
           </button>
-          {hasCommessa && (
-            <button type="button" onClick={handleSave} disabled={saveStatus === 'saving'} style={{
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "7px 14px", borderRadius: 8,
-              border: "1.5px solid #C4B5FD", background: "white",
-              color: "#7C3AED", fontWeight: 600, fontSize: 13, cursor: saveStatus === 'saving' ? "wait" : "pointer",
-              ...(saveStatus === 'saved' ? { background: "#EAF3DE", color: "#3B6D11", borderColor: "#97C459" } :
-                 saveStatus === 'error' ? { background: "#FCEBEB", color: "#A32D2D", borderColor: "#F09595" } : {}),
-            }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-              {saveStatus === 'saving' ? 'Salvo...' : saveStatus === 'saved' ? '✓ Salvato' : saveStatus === 'error' ? '✗ Errore' : 'Salva'}
-            </button>
-          )}
+          <button type="button" onClick={handleSave} disabled={saveStatus === 'saving'} title={hasCommessa ? "Salva la commessa" : "Salva una bozza in questo browser"} style={{
+            display: "flex", alignItems: "center", gap: 6,
+            padding: "7px 14px", borderRadius: 8,
+            border: "1.5px solid #C4B5FD", background: "white",
+            color: "#7C3AED", fontWeight: 600, fontSize: 13, cursor: saveStatus === 'saving' ? "wait" : "pointer",
+            ...(saveStatus === 'saved' ? { background: "#EAF3DE", color: "#3B6D11", borderColor: "#97C459" } :
+               saveStatus === 'error' ? { background: "#FCEBEB", color: "#A32D2D", borderColor: "#F09595" } : {}),
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            {saveStatus === 'saving' ? 'Salvo...' : saveStatus === 'saved' ? '✓ Salvato' : saveStatus === 'error' ? '✗ Errore' : 'Salva'}
+          </button>
         </div>
       </div>
 

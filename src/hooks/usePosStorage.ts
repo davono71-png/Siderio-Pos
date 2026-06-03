@@ -7,6 +7,11 @@ export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 export function usePosStorage() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
 
+  const resetStatus = useCallback((status: SaveStatus, delayMs: number) => {
+    setSaveStatus(status)
+    setTimeout(() => setSaveStatus('idle'), delayMs)
+  }, [])
+
   const loadPos = useCallback(async (commId: string): Promise<PosData | null> => {
     try {
       const { data, error } = await supabase
@@ -22,6 +27,33 @@ export function usePosStorage() {
       return null
     }
   }, [])
+
+  const loadLocalPos = useCallback((draftKey: string): PosData | null => {
+    try {
+      const storedDraft = window.localStorage.getItem(draftKey)
+      if (!storedDraft) return null
+
+      const parsed = JSON.parse(storedDraft) as { data?: PosData }
+      return parsed.data ?? null
+    } catch (e) {
+      console.error('loadLocalPos error:', e)
+      return null
+    }
+  }, [])
+
+  const saveLocalPos = useCallback((pos: PosData, draftKey: string): void => {
+    setSaveStatus('saving')
+    try {
+      window.localStorage.setItem(draftKey, JSON.stringify({
+        data: pos,
+        savedAt: new Date().toISOString(),
+      }))
+      resetStatus('saved', 2000)
+    } catch (e) {
+      console.error('saveLocalPos error:', e)
+      resetStatus('error', 3000)
+    }
+  }, [resetStatus])
 
   const savePos = useCallback(async (pos: PosData, commId: string): Promise<void> => {
     setSaveStatus('saving')
@@ -48,14 +80,12 @@ export function usePosStorage() {
         if (error) throw error
       }
 
-      setSaveStatus('saved')
-      setTimeout(() => setSaveStatus('idle'), 2000)
+      resetStatus('saved', 2000)
     } catch (e) {
       console.error('savePos error:', e)
-      setSaveStatus('error')
-      setTimeout(() => setSaveStatus('idle'), 3000)
+      resetStatus('error', 3000)
     }
-  }, [])
+  }, [resetStatus])
 
-  return { loadPos, savePos, saveStatus }
+  return { loadPos, loadLocalPos, savePos, saveLocalPos, saveStatus }
 }
