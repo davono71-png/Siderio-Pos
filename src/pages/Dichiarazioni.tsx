@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState } from 'react'
 import type { PosData } from '../types/pos'
 import { persone } from '../data/personale'

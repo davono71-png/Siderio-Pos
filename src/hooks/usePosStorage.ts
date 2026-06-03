@@ -4,7 +4,7 @@ import type { PosData } from '../types/pos'
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
-export function usePosStorage(_commessaId: string | null) {
+export function usePosStorage() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
 
   const loadPos = useCallback(async (commId: string): Promise<PosData | null> => {
@@ -13,6 +13,7 @@ export function usePosStorage(_commessaId: string | null) {
         .from('pos_data')
         .select('data')
         .eq('commessa_id', commId)
+        .limit(1)
         .maybeSingle()
       if (error) throw error
       return data?.data ?? null
@@ -25,10 +26,28 @@ export function usePosStorage(_commessaId: string | null) {
   const savePos = useCallback(async (pos: PosData, commId: string): Promise<void> => {
     setSaveStatus('saving')
     try {
-      const { error } = await supabase
+      const { data: existing, error: lookupError } = await supabase
         .from('pos_data')
-        .upsert({ commessa_id: commId, data: pos }, { onConflict: 'commessa_id' })
-      if (error) throw error
+        .select('commessa_id')
+        .eq('commessa_id', commId)
+        .limit(1)
+        .maybeSingle()
+
+      if (lookupError) throw lookupError
+
+      if (existing) {
+        const { error } = await supabase
+          .from('pos_data')
+          .update({ data: pos })
+          .eq('commessa_id', commId)
+        if (error) throw error
+      } else {
+        const { error } = await supabase
+          .from('pos_data')
+          .insert({ commessa_id: commId, data: pos })
+        if (error) throw error
+      }
+
       setSaveStatus('saved')
       setTimeout(() => setSaveStatus('idle'), 2000)
     } catch (e) {
@@ -38,7 +57,5 @@ export function usePosStorage(_commessaId: string | null) {
     }
   }, [])
 
-  const setLoading = useCallback((_v: boolean) => {}, [])
-
-  return { loadPos, savePos, saveStatus, setLoading }
+  return { loadPos, savePos, saveStatus }
 }

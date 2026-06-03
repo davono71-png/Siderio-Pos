@@ -1,5 +1,4 @@
-// @ts-nocheck
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useMemo } from "react"
 import DocumentoCompleto from "./pages/DocumentoCompleto"
 import Frontespizio from "./pages/Frontespizio"
 import Capitolo0Cantiere from "./pages/Capitolo0Cantiere"
@@ -19,7 +18,6 @@ import type { PosData } from "./types/pos"
 import DichiarazioniPanel, { DichiarazioniPreview } from './pages/Dichiarazioni'
 import { usePosStorage } from "./hooks/usePosStorage"
 
-const PRIMARY = "#7C3AED" // eslint-disable-line
 const SUITE_URL = 'https://siderio-suite-app.vercel.app'
 // const GREEN = "#22843a"
 // const AMBER = "#b45309"
@@ -49,7 +47,7 @@ function getUrlParams() {
 
 
 // ─── MINIATURE PAGINE ────────────────────────────────────────────────────────
-const PAGINE = [
+const PAGINE: { n: number; label: string; section: Section }[] = [
   { n: 1,  label: "Frontespizio",   section: "frontespizio" },
   { n: 2,  label: "Sommario",       section: "frontespizio" },
   { n: 3,  label: "0.1 Dati doc.",  section: "cantiere" },
@@ -66,7 +64,7 @@ const PAGINE = [
   { n: 14, label: "5. PSC 2",       section: "emergenze" },
 ]
 
-function ThumbnailStrip({ onSectionChange }: { onSectionChange: (s: string) => void }) {
+function ThumbnailStrip({ onSectionChange }: { onSectionChange: (s: Section) => void }) {
   const [activePage, setActivePage] = React.useState(1)
   const stripRef = React.useRef<HTMLDivElement>(null)
 
@@ -99,7 +97,7 @@ function ThumbnailStrip({ onSectionChange }: { onSectionChange: (s: string) => v
     return () => observer.disconnect()
   }, [])
 
-  function scrollToPage(n: number, section?: string) {
+  function scrollToPage(n: number, section?: Section) {
     const pages = document.querySelectorAll('.page-a4')
     const page = pages[n - 1]
     if (page) page.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -167,15 +165,15 @@ export default function App() {
     }
   }
   const [pos, setPos] = useState<PosData>(initialPosData)
-  const [appReady, setAppReady] = useState(true) // Demo: sempre pronto
-  const urlParams = useRef(getUrlParams())
-  const { loadPos, savePos, saveStatus } = usePosStorage(urlParams.current.commessaId)
+  const [appReady, setAppReady] = useState(false)
+  const urlParams = useMemo(() => getUrlParams(), [])
+  const { loadPos, savePos, saveStatus } = usePosStorage()
 
   // All'avvio: carica da Supabase se c'è commessa_id, altrimenti pre-compila con URL params
   useEffect(() => {
     async function init() {
       try {
-      const { commessaId, numero, cliente } = urlParams.current
+      const { commessaId, numero, cliente } = urlParams
 
       if (commessaId) {
         let saved = null
@@ -206,18 +204,16 @@ export default function App() {
       }
 
       } catch(e) { console.error('Init error:', e) }
-      setLoading(false)
       setAppReady(true)
     }
     init()
-  }, [])
+  }, [loadPos, urlParams])
 
   // Autosave disabilitato in modalità demo
 
-  // eslint-disable-next-line
   function handleSave() {
-    if (urlParams.current.commessaId) {
-      savePos(pos, urlParams.current.commessaId)
+    if (urlParams.commessaId) {
+      void savePos(pos, urlParams.commessaId)
     }
   }
 
@@ -235,7 +231,7 @@ export default function App() {
     )
   }
 
-  const hasCommessa = false // Demo: nessun collegamento a Suite
+  const hasCommessa = Boolean(urlParams.commessaId)
 
   return (
     <div style={{ minHeight: "100vh", background: "#F5F3FF" }}>
@@ -282,7 +278,7 @@ export default function App() {
         </div>
         <div style={{ flex: 1 }} />
 
-        {urlParams.current.commessaId && (
+        {hasCommessa && (
           <button onClick={() => { window.location.href = SUITE_URL }} style={{
             display: "flex", alignItems: "center", gap: 6,
             padding: "7px 14px", borderRadius: 8,
@@ -312,12 +308,12 @@ export default function App() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
             Genera PDF
           </button>
-          {urlParams.current.commessaId && (
-            <button onClick={handleSave} style={{
+          {hasCommessa && (
+            <button type="button" onClick={handleSave} disabled={saveStatus === 'saving'} style={{
               display: "flex", alignItems: "center", gap: 6,
               padding: "7px 14px", borderRadius: 8,
               border: "1.5px solid #C4B5FD", background: "white",
-              color: "#7C3AED", fontWeight: 600, fontSize: 13, cursor: "pointer",
+              color: "#7C3AED", fontWeight: 600, fontSize: 13, cursor: saveStatus === 'saving' ? "wait" : "pointer",
               ...(saveStatus === 'saved' ? { background: "#EAF3DE", color: "#3B6D11", borderColor: "#97C459" } :
                  saveStatus === 'error' ? { background: "#FCEBEB", color: "#A32D2D", borderColor: "#F09595" } : {}),
             }}>
