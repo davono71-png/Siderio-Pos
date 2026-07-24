@@ -17,6 +17,7 @@ import { initialPosData } from "./data/initialPosData"
 import type { PosData } from "./types/pos"
 import DichiarazioniPanel, { DichiarazioniPreview } from './pages/Dichiarazioni'
 import { usePosStorage } from "./hooks/usePosStorage"
+import { initSessionFromSuite } from "./supabaseClient"
 
 const SUITE_URL = 'https://siderio-suite-app.vercel.app'
 // const GREEN = "#22843a"
@@ -194,6 +195,7 @@ export default function App() {
   useEffect(() => {
     async function init() {
       try {
+      await initSessionFromSuite()
       const { commessaId, numero, cliente } = urlParams
 
       if (commessaId) {
