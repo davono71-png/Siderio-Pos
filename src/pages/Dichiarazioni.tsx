@@ -8,6 +8,12 @@ function getNome(id: string): string {
   return p ? p.nome : id.toUpperCase()
 }
 
+// Helper: preposto assegnato nel POS per questo specifico cantiere (parametro scelto nel POS)
+function getPrepostoCantiere(pos: PosData): string {
+  const row = pos.personaleCantiere.find(p => p.ruolo === 'PREPOSTO')
+  return row ? getNome(row.personaId) : ARCHE.preposto
+}
+
 // Helper: formatta data ISO in italiano
 function formatData(iso: string): string {
   if (!iso) return ''
@@ -27,6 +33,9 @@ const ARCHE = {
   fax: "0302770790",
   email: "info@archeitalia.com",
   legaleRappresentante: "DELBARBA GIANFRANCO",
+  legaleRappresentanteNato: "BRESCIA",
+  legaleRappresentanteDataNascita: "30/05/1965",
+  legaleRappresentanteResidenza: "CELLATICA (BS), Via XXVIII Maggio n°55",
   datoreLavoro: "ONOFRI DAVIDE",
   datoreLavoroNato: "BRESCIA",
   datoreLavoroDataNascita: "23/08/71",
@@ -34,8 +43,9 @@ const ARCHE = {
   rspp: "ONOFRI DAVIDE",
   medicoCompetente: "DOTTORESSA MARCHETTI SERENA",
   rls: "TOMMASO ONOFRI",
-  preposto: "ONOFRI DAVIDE",
+  preposto: "DELBARBA GIANFRANCO",
   prepostoSostituto: "ANDREATTA FABIO",
+  prepostoSostituto2: "ONOFRI TOMMASO",
   primoSoccorso: "Fabio Andreatta",
   prevInc: "Fabio Andreatta",
   inps: "1517534914",
@@ -169,8 +179,8 @@ function Doc2({ pos }: { pos: PosData }) {
         <div>Al Coordinatore in sede di esecuzione dei lavori</div>
       </div>
       <p style={bodyStyle}><strong>Cantiere di:</strong> {pos.committente.indirizzoCantiere}</p>
-      <p style={bodyStyle}>Il sottoscritto <strong>{ARCHE.datoreLavoro}</strong>, nato a <strong>{ARCHE.datoreLavoroNato}</strong> il <strong>{ARCHE.datoreLavoroDataNascita}</strong><br />
-      residente a {ARCHE.datoreLavoroResidenza}<br />
+      <p style={bodyStyle}>Il sottoscritto <strong>{ARCHE.legaleRappresentante}</strong>, nato a <strong>{ARCHE.legaleRappresentanteNato}</strong> il <strong>{ARCHE.legaleRappresentanteDataNascita}</strong><br />
+      residente a {ARCHE.legaleRappresentanteResidenza}<br />
       in qualità di legale rappresentante della Ditta: <strong>{ARCHE.ragioneSociale}</strong><br />
       ed in riferimento ai lavori da eseguire presso <strong>{pos.committente.nomeDitta}</strong><br />
       {pos.committente.indirizzoCantiere}<br />
@@ -208,7 +218,7 @@ function Doc3({ pos }: { pos: PosData }) {
       <p style={bodyStyle}><strong>Cantiere di:</strong> {pos.committente.indirizzoCantiere}</p>
       <p style={bodyStyle}><strong>Lavori di:</strong> {pos.lavori}</p>
       <p style={bodyStyle}>Il sottoscritto <strong>{ARCHE.datoreLavoro}</strong><br />
-      Titolare e legale rappresentante dell'impresa <strong>{ARCHE.ragioneSociale}</strong><br />
+      Datore di lavoro dell'impresa <strong>{ARCHE.ragioneSociale}</strong><br />
       con sede in via <strong>{ARCHE.via}</strong> — {ARCHE.citta} {ARCHE.cap}</p>
       <p style={bodyStyle}><strong>DICHIARA</strong></p>
       <p style={bodyStyle}><strong>Sotto la propria responsabilità di essere in regola con quanto richiesto dal D.lgs 81/08 e s.m.i. e che l'organizzazione della Sicurezza all'interno della propria Azienda prevede le seguenti figure professionali:</strong></p>
@@ -218,15 +228,12 @@ function Doc3({ pos }: { pos: PosData }) {
         <li><strong>Rappresentante dei Lavoratori per la sicurezza</strong> nella persona di <strong>{ARCHE.rls}</strong></li>
       </ul>
       {(() => {
-        const datore = pos.personaleCantiere.find(p => p.ruolo === 'DATORE DI LAVORO')
-        const preposto = datore ? getNome(datore.personaId) : ARCHE.preposto
-        const altri = pos.personaleCantiere.filter(p => p.ruolo !== 'DATORE DI LAVORO')
-        const sostituto = altri.length > 0 ? getNome(altri[0].personaId) : ARCHE.prepostoSostituto
+        const preposto = getPrepostoCantiere(pos)
         const primoSoccorso = pos.addettiEmergenza.find(e => e.ruoloEmergenza === 'ADDETTO I SOCCORSO')
         const antincendio = pos.addettiEmergenza.find(e => e.ruoloEmergenza === 'ADDETTO ANTINCENDIO')
         return (
           <>
-            <p style={bodyStyle}>La figura del <strong>preposto</strong> sarà svolta da <strong>{preposto}</strong> e in sua assenza <strong>{sostituto}</strong></p>
+            <p style={bodyStyle}>La figura del <strong>preposto</strong> sarà svolta da <strong>{preposto}</strong></p>
             <p style={bodyStyle}>E quella degli <strong>addetti alle emergenze</strong>:<br />
             <strong>primo soccorso</strong> {primoSoccorso ? getNome(primoSoccorso.personaId) : ARCHE.primoSoccorso}<br />
             <strong>prevenzione incendi</strong> {antincendio ? getNome(antincendio.personaId) : ARCHE.prevInc}</p>
@@ -234,7 +241,7 @@ function Doc3({ pos }: { pos: PosData }) {
         )
       })()}
       <p style={bodyStyle}>Si allegano alla dichiarazione copie degli attestati dei corsi e nomina dei responsabili.</p>
-      <Firma />
+      <Firma label="Il Datore di lavoro" />
     </div>
   )
 }
@@ -332,7 +339,7 @@ function Doc7({ pos }: { pos: PosData }) {
       <p style={bodyStyle}>sotto la propria responsabilità, ai sensi dell'art. 14 del D.Lgs. 81/2008 e s.m.i., che l'impresa non è oggetto di provvedimenti di sospensione dell'attività imprenditoriale adottati ai sensi del comma 1 del medesimo articolo.</p>
       <p style={bodyStyle}>Dichiara altresì che nei confronti dell'impresa non sono stati adottati provvedimenti di sospensione relativi a violazioni in materia di lavoro e legislazione sociale.</p>
       <p style={bodyStyle}><strong>Si autorizza al trattamento dei dati ai sensi del D.Lgs. n. 196/2003.</strong></p>
-      <Firma />
+      <Firma label="Il Datore di lavoro" />
     </div>
   )
 }
@@ -356,7 +363,7 @@ function Doc8({ pos }: { pos: PosData }) {
       <p style={bodyStyle}>ai sensi e per gli effetti dell'art. 29 comma 5 del D.Lgs. 81/2008 e s.m.i., di avere effettuato la valutazione dei rischi per la sicurezza e la salute durante il lavoro ai sensi del D.Lgs. 81/08 e s.m.i. e di avere predisposto il relativo documento di valutazione dei rischi.</p>
       <p style={bodyStyle}>Dichiara altresì che il documento di valutazione dei rischi è custodito presso la sede aziendale ed è disponibile per la consultazione da parte degli organi di vigilanza.</p>
       <p style={bodyStyle}><strong>Si autorizza al trattamento dei dati ai sensi del D.Lgs. n. 196/2003.</strong></p>
-      <Firma />
+      <Firma label="Il Datore di lavoro" />
     </div>
   )
 }
@@ -367,6 +374,7 @@ function Doc9({ pos }: { pos: PosData }) {
     <div style={pageStyle}>
       <DocHeader />
       <div style={titleStyle}>Nominativi delle figure addette alla sicurezza all'interno dell'azienda</div>
+      <div style={{ ...titleStyle, fontSize: '9pt', marginBottom: 20 }}>incaricati per l'assolvimento dei compiti dell'art. 97 del D.Lgs. 81/08 e s.m.i.</div>
       <div style={destStyle}>
         <div><strong>Al Committente</strong></div>
         <div><strong>{pos.committente.nomeDitta}</strong></div>
@@ -378,24 +386,17 @@ function Doc9({ pos }: { pos: PosData }) {
       <p style={bodyStyle}>L'impresa <strong>{ARCHE.ragioneSociale}</strong> comunica i nominativi delle figure addette alla sicurezza:</p>
       <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 14, fontSize: '9.5pt' }}>
         <tbody>
-          {(() => {
-            const datore = pos.personaleCantiere.find(p => p.ruolo === 'DATORE DI LAVORO')
-            const preposto = datore ? getNome(datore.personaId) : ARCHE.preposto
-            const altri = pos.personaleCantiere.filter(p => p.ruolo !== 'DATORE DI LAVORO')
-            const sostituto = altri.length > 0 ? getNome(altri[0].personaId) : ARCHE.prepostoSostituto
-            const primoSoccorso = pos.addettiEmergenza.find(e => e.ruoloEmergenza === 'ADDETTO I SOCCORSO')
-            const antincendio = pos.addettiEmergenza.find(e => e.ruoloEmergenza === 'ADDETTO ANTINCENDIO')
-            return [
-              ['Datore di Lavoro', pos.nostraDitta.datoreLavoro || ARCHE.datoreLavoro],
-              ['RSPP', pos.nostraDitta.rspp || ARCHE.rspp],
-              ['Medico Competente', pos.nostraDitta.medicoLavoro || ARCHE.medicoCompetente],
-              ['RLS', pos.nostraDitta.rls || ARCHE.rls],
-              ['Preposto', preposto],
-              ['Preposto sostituto', sostituto],
-              ['Addetto primo soccorso', primoSoccorso ? getNome(primoSoccorso.personaId) : ARCHE.primoSoccorso],
-              ['Addetto prevenzione incendi', antincendio ? getNome(antincendio.personaId) : ARCHE.prevInc],
-            ]
-          })().map(([ruolo, nome]) => (
+          {[
+            ['Datore di Lavoro', ARCHE.datoreLavoro],
+            ['RSPP', ARCHE.rspp],
+            ['Medico Competente', ARCHE.medicoCompetente],
+            ['RLS', ARCHE.rls],
+            ['Preposto', ARCHE.preposto],
+            ['Preposto sostituto', ARCHE.prepostoSostituto],
+            ['Sotto preposto', ARCHE.prepostoSostituto2],
+            ['Addetto primo soccorso', ARCHE.primoSoccorso],
+            ['Addetto prevenzione incendi', ARCHE.prevInc],
+          ].map(([ruolo, nome]) => (
             <tr key={ruolo}>
               <td style={{ border: '0.5pt solid #D1D5DB', padding: '5px 8px', background: '#FAFAFA', width: '55%', fontWeight: 500 }}>{ruolo}</td>
               <td style={{ border: '0.5pt solid #D1D5DB', padding: '5px 8px' }}>{nome}</td>
@@ -478,12 +479,16 @@ function Doc12({ pos }: { pos: PosData }) {
       <p style={bodyStyle}>Si comunica che i soggetti dell'impresa <strong>{ARCHE.ragioneSociale}</strong> incaricati per l'assolvimento dei compiti di cui all'art. 97 del D.Lgs. 81/08 e s.m.i. sono i seguenti:</p>
       <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 14, fontSize: '9.5pt' }}>
         <tbody>
-          {[
-            ['Datore di Lavoro', ARCHE.datoreLavoro],
-            ['Preposto', ARCHE.preposto],
-            ['Preposto sostituto', ARCHE.prepostoSostituto],
-            ['RSPP', ARCHE.rspp],
-          ].map(([ruolo, nome]) => (
+          {(() => {
+            const datore = pos.personaleCantiere.find(p => p.ruolo === 'DATORE DI LAVORO')
+            const datoreNome = datore ? getNome(datore.personaId) : ARCHE.datoreLavoro
+            const preposto = getPrepostoCantiere(pos)
+            return [
+              ['Datore di Lavoro', datoreNome],
+              ['Preposto', preposto],
+              ['RSPP', pos.nostraDitta.rspp || ARCHE.rspp],
+            ]
+          })().map(([ruolo, nome]) => (
             <tr key={ruolo}>
               <td style={{ border: '0.5pt solid #D1D5DB', padding: '5px 8px', background: '#FAFAFA', width: '45%', fontWeight: 500 }}>{ruolo}</td>
               <td style={{ border: '0.5pt solid #D1D5DB', padding: '5px 8px' }}>{nome}</td>
