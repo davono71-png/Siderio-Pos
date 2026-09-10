@@ -392,12 +392,12 @@ function Doc9({ pos }: { pos: PosData }) {
             ['Medico Competente', ARCHE.medicoCompetente],
             ['RLS', ARCHE.rls],
             ['Preposto', ARCHE.preposto],
-            ['Preposto sostituto', ARCHE.prepostoSostituto],
-            ['Sotto preposto', ARCHE.prepostoSostituto2],
+            ['Preposto (in caso di assenza)', ARCHE.prepostoSostituto],
+            ['Preposto (in caso di assenza)', ARCHE.prepostoSostituto2],
             ['Addetto primo soccorso', ARCHE.primoSoccorso],
             ['Addetto prevenzione incendi', ARCHE.prevInc],
-          ].map(([ruolo, nome]) => (
-            <tr key={ruolo}>
+          ].map(([ruolo, nome], i) => (
+            <tr key={i}>
               <td style={{ border: '0.5pt solid #D1D5DB', padding: '5px 8px', background: '#FAFAFA', width: '55%', fontWeight: 500 }}>{ruolo}</td>
               <td style={{ border: '0.5pt solid #D1D5DB', padding: '5px 8px' }}>{nome}</td>
             </tr>
