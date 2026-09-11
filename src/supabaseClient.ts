@@ -7,7 +7,14 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 const url = supabaseUrl || 'https://kvsrnxsaajsdmkikipjl.supabase.co'
 const key = supabaseAnonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2c3JueHNhYWpzZG1raWtpcGpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDU5NjYsImV4cCI6MjA5NDc4MTk2Nn0.koeqbhxar2pB-wy2CjpSu9V0hM8NH5YqV5u8Pfwa-0c'
 
-export const supabase = createClient(url, key)
+// detectSessionInUrl: false — di default il client supabase-js intercetta da solo
+// un fragment URL con access_token/refresh_token (flusso OAuth implicit), consumando
+// il refresh_token PRIMA che initSessionFromSuite() sotto possa usarlo esplicitamente.
+// Il secondo tentativo fallisce con "Invalid Refresh Token: Already Used" (401) e la
+// sessione non viene mai stabilita, quindi ogni salvataggio su pos_data va in 401.
+export const supabase = createClient(url, key, {
+  auth: { detectSessionInUrl: false },
+})
 
 // Siderio-Suite-2 (app autenticata) apre questa app passando la sessione corrente
 // come fragment URL (#access_token=...&refresh_token=...), non come query string,
