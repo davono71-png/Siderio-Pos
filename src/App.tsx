@@ -67,6 +67,28 @@ function createInitialPos(numero: string, cliente: string): PosData {
 }
 
 
+// Il foglio A4 (210mm, circa 794px) non entra negli schermi stretti: sul telefono
+// o sul Fold si riduce con zoom fino a stare nella colonna, invece di allargare
+// tutta la pagina. Le misure seguono quelle di .pos-body e .pos-editor in index.css.
+const A4_PX = 800
+
+function useViewportWidth() {
+  const [width, setWidth] = useState(() => window.innerWidth)
+  useEffect(() => {
+    const onResize = () => setWidth(window.innerWidth)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+  return width
+}
+
+function docZoom(viewport: number, withSidePanels: boolean) {
+  const padding = viewport < 600 ? 12 : 24
+  const content = Math.min(1400, viewport - 2 * padding)
+  const column = withSidePanels && viewport >= 1024 ? content - 400 - 110 : content
+  return Math.min(1, Math.max(0.3, column / A4_PX))
+}
+
 // ─── MINIATURE PAGINE ────────────────────────────────────────────────────────
 const PAGINE: { n: number; label: string; section: Section }[] = [
   { n: 1,  label: "Frontespizio",   section: "frontespizio" },
@@ -129,7 +151,7 @@ function ThumbnailStrip({ onSectionChange }: { onSectionChange: (s: Section) => 
   return (
     <div
       ref={stripRef}
-      className="no-print"
+      className="no-print pos-thumbs"
       style={{
         width: 110, flexShrink: 0, background: 'white',
         borderLeft: '1px solid #EDE9FE',
@@ -185,6 +207,7 @@ export default function App() {
       leftPanelRef.current.scrollTop = 0
     }
   }
+  const viewportWidth = useViewportWidth()
   const [pos, setPos] = useState<PosData>(initialPosData)
   const [appReady, setAppReady] = useState(false)
   const urlParams = useMemo(() => getUrlParams(), [])
@@ -255,18 +278,13 @@ export default function App() {
   }
 
   const hasCommessa = Boolean(urlParams.commessaId)
+  const docZoomStyle = { "--doc-zoom": docZoom(viewportWidth, section !== "preview") } as React.CSSProperties
 
   return (
     <div style={{ minHeight: "100vh", background: "#F5F3FF" }}>
       {/* ── TOPBAR ── */}
-      <div className="no-print" style={{
-        background: "white", padding: "0 20px",
-        display: "flex", alignItems: "center", gap: 0,
-        position: "sticky", top: 0, zIndex: 50,
-        boxShadow: "0 1px 4px rgba(91,33,182,0.08)",
-        borderBottom: "1px solid #E5E7EB", minHeight: 52,
-      }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 5, marginRight: 28, flexShrink: 0 }}>
+      <div className="no-print pos-topbar">
+        <div style={{ display: "flex", alignItems: "baseline", gap: 5, flexShrink: 0 }}>
           <span style={{ fontSize: 20, fontWeight: 900, color: "#3B0764", letterSpacing: -0.5 }}>S</span>
           <span style={{ fontSize: 12, fontWeight: 400, color: "#8B5CF6" }}>SIDERIO</span>
         </div>
@@ -276,6 +294,7 @@ export default function App() {
         {hasCommessa && (
           <a
             href={SUITE_URL}
+            className="pos-back"
             style={{
               marginRight: 16, padding: "5px 14px", borderRadius: 8,
               background: "rgba(255,255,255,0.15)", color: "white",
@@ -287,7 +306,7 @@ export default function App() {
           </a>
         )}
 
-        <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", display: "flex", gap: 0 }}>
+        <nav className="pos-menu">
           {MENU.map(({ key, label }) => (
             <button key={key} onClick={() => changeSection(key as Section)} style={{
               padding: "14px 12px", border: "none", cursor: "pointer",
@@ -298,38 +317,37 @@ export default function App() {
               transition: "all 0.15s", whiteSpace: "nowrap",
             }}>{label}</button>
           ))}
-        </div>
-        <div style={{ flex: 1 }} />
+        </nav>
 
+        <div className="pos-actions">
         {hasCommessa && (
           <button onClick={() => { window.location.href = SUITE_URL }} style={{
             display: "flex", alignItems: "center", gap: 6,
             padding: "7px 14px", borderRadius: 8,
             border: "1.5px solid #EDE9FE", background: "white",
-            color: "#6B7280", fontWeight: 600, fontSize: 13, cursor: "pointer", marginRight: 8,
-          }}>
+            color: "#6B7280", fontWeight: 600, fontSize: 13, cursor: "pointer",
+          }} title="Torna alla Suite">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
-            Suite
+            <span className="pos-btn-label">Suite</span>
           </button>
         )}
-        <div style={{ display: "flex", gap: 8, marginLeft: "auto", flexShrink: 0 }}>
-          <button onClick={() => setSection("preview")} style={{
+          <button onClick={() => setSection("preview")} title="Anteprima" style={{
             display: "flex", alignItems: "center", gap: 6,
             padding: "7px 14px", borderRadius: 8,
             border: "1.5px solid #C4B5FD", background: "white",
             color: "#7C3AED", fontWeight: 600, fontSize: 13, cursor: "pointer",
           }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            Anteprima
+            <span className="pos-btn-label">Anteprima</span>
           </button>
-          <button onClick={() => { setSection("preview"); setTimeout(()=>window.print(),400) }} style={{
+          <button onClick={() => { setSection("preview"); setTimeout(()=>window.print(),400) }} title="Genera PDF" style={{
             display: "flex", alignItems: "center", gap: 6,
             padding: "7px 14px", borderRadius: 8,
             border: "none", background: "#7C3AED",
             color: "white", fontWeight: 600, fontSize: 13, cursor: "pointer",
           }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
-            Genera PDF
+            <span className="pos-btn-label">Genera PDF</span>
           </button>
           <button type="button" onClick={handleSave} disabled={saveStatus === 'saving'} title={hasCommessa ? "Salva la commessa" : "Salva una bozza in questo browser"} style={{
             display: "flex", alignItems: "center", gap: 6,
@@ -346,7 +364,7 @@ export default function App() {
       </div>
 
       {/* ── BODY ── */}
-      <div style={{ padding: 24 }}>
+      <div className="pos-body">
         {section === "preview" ? (
           <div style={{ display: "flex", gap: 0 }}>
             {/* Documento + toolbar */}
@@ -369,18 +387,17 @@ export default function App() {
                 </button>
 
               </div>
-              <div id="doc-scroll-area">
+              <div id="doc-scroll-area" className="pos-doc" style={docZoomStyle}>
                 <DocumentoCompleto pos={pos} />
               </div>
             </div>
 
             </div>
         ) : (
-          <div style={{ maxWidth: 1400, margin: "0 auto", display: "grid", gridTemplateColumns: "400px 1fr 110px", gap: 0 }}>
-            <div ref={leftPanelRef} className="no-print" style={{
+          <div className="pos-editor">
+            <div ref={leftPanelRef} className="no-print pos-panel" style={{
               background: "white", borderRadius: 12,
               boxShadow: "0 2px 12px rgba(91,33,182,0.08)",
-              position: "sticky", top: 68, maxHeight: "calc(100vh - 88px)",
               border: "1px solid #EDE9FE", display: "flex", flexDirection: "column",
             }}>
               <div style={{
@@ -407,7 +424,7 @@ export default function App() {
               </div>
             </div>
 
-            <div>
+            <div className="pos-doc" style={docZoomStyle}>
               {section === "frontespizio" && <Frontespizio pos={pos} />}
               {section === "cantiere"     && <Capitolo0Cantiere pos={pos} />}
               {section === "personale"    && <Capitolo1Personale pos={pos} />}
