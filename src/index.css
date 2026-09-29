@@ -128,3 +128,91 @@ body {
     page-break-after: always;
   }
 }
+
+/* ═══════════════════════════════════
+   LAYOUT APP (barra in alto + corpo)
+   Su schermi stretti (telefoni, Galaxy Fold chiuso e aperto) il menu
+   va su una riga sua e scorre in orizzontale, invece di finire sopra
+   i pulsanti; il corpo passa a una colonna e il foglio A4 si riduce.
+═══════════════════════════════════ */
+.pos-topbar {
+  background: white;
+  padding: 0 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 1px 4px rgba(91,33,182,0.08);
+  border-bottom: 1px solid #E5E7EB;
+  min-height: 52px;
+}
+
+.pos-menu {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  justify-content: safe center;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.pos-menu::-webkit-scrollbar { display: none; }
+.pos-menu button { flex-shrink: 0; }
+
+.pos-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.pos-body { padding: 24px; }
+
+.pos-editor {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 400px minmax(0, 1fr) 110px;
+}
+
+.pos-panel {
+  position: sticky;
+  top: 68px;
+  max-height: calc(100vh - 88px);
+}
+
+.pos-doc { zoom: var(--doc-zoom, 1); }
+
+@media (max-width: 1599px) {
+  .pos-menu {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: flex-start;
+    border-top: 1px solid #F3F4F6;
+    margin: 0 -20px;
+    padding: 0 8px;
+  }
+  .pos-actions { padding: 8px 0; }
+}
+
+@media (max-width: 1023px) {
+  .pos-editor { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .pos-panel { position: static; max-height: none; }
+  .pos-thumbs { display: none !important; }
+}
+
+@media (max-width: 599px) {
+  .pos-topbar { padding: 0 12px; column-gap: 8px; }
+  .pos-menu { margin: 0 -12px; padding: 0 4px; }
+  .pos-actions { gap: 6px; }
+  .pos-btn-label, .pos-back { display: none !important; }
+  .pos-actions button { padding: 7px 10px !important; }
+  .pos-body { padding: 12px; }
+}
+
+@media print {
+  .pos-doc { zoom: 1 !important; }
+}
